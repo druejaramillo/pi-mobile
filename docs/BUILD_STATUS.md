@@ -6,7 +6,16 @@ Native iPhone app, direct SSH over always-available Tailscale, existing Herdr/Pi
 
 ## Checkpoints
 
-1. Protocol and product scaffolding: authored; implementation underway.
+1. Protocol and product scaffolding: committed and pushed (`c2e6c3c`).
+2. Native UI scaffold: global agent directory, machine/workspace/tab navigation, native conversation/composer, live-dialog controls, terminal control affordances, review sheet, Keychain storage and foreground-only lifecycle authored. SSH/dictation helpers are completing their implementations.
+
+## Checks run so far
+
+- Swift tree-sitter grammar parse: 12 coordinator-owned Swift files, no syntax errors. This is **not** a Swift typecheck or Xcode build.
+- Info.plist, project YAML and asset JSON parse: passed.
+- `git diff --check`: passed.
+- `tools/build-ios.sh` correctly refused Linux with an actionable Mac prerequisite message.
+- Code intelligence reported no Swift lint/typecheck mapping; no clean native-build result is claimed.
 
 ## Verification limits
 

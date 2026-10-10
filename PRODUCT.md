@@ -25,6 +25,7 @@ Herdr owns terminal processes and topology. Pi owns each conversation, commands,
 ## Capabilities and Constraints
 
 - Native iOS controls and navigation, one pane at a time.
+- A first-class global Agents screen lists recognized running agents across every configured machine with status and machine/workspace/tab context. Tapping an agent goes directly to its native conversation or terminal. Unreachable machines and cached/stale state remain explicit; an offline machine must not look empty.
 - Direct SSH connections; no central terminal gateway or public HTTP service.
 - SSH keys stored in Keychain, explicit host-key verification.
 - A native conversation surface backed by the same live Pi process; unsupported custom interfaces remain accessible in the terminal.

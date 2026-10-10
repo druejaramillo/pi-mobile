@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Original Pi Mobile mark. Raster source: this file, not generated imagery. -->
+  <rect width="1024" height="1024" fill="#0067ed"/>
+  <g fill="none" stroke="#ffffff" stroke-width="88" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M244 322 H780"/>
+    <path d="M362 322 V714"/>
+    <path d="M656 322 V630 Q656 714 742 714"/>
+  </g>
+</svg>
