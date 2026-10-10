@@ -1,0 +1,25 @@
+# Secrets and local machine state
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.mobileprovision
+.credentials*
+.DS_Store
+
+# Dependencies/build products
+node_modules/
+dist/
+.build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+ios/PiMobile.xcodeproj/
+
+# Developer-only evidence/runtime
+.impeccable/mocks/
+.impeccable/review/
+.pi/
+coverage/
