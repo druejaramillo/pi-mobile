@@ -32,7 +32,7 @@ public struct MobileTerminalView: UIViewRepresentable {
     /// Updates callback ownership without feeding the same history twice.
     public func updateUIView(_ uiView: SwiftTerm.TerminalView, context: Context) {
         (uiView as? MobileTerminalHostView)?.inputEnabled = interactive
-        if !interactive { uiView.resignFirstResponder() }
+        if !interactive { _ = uiView.resignFirstResponder() }
         context.coordinator.update(parent: self, view: uiView)
     }
 
@@ -43,7 +43,7 @@ public struct MobileTerminalView: UIViewRepresentable {
     public static func dismantleUIView(_ uiView: SwiftTerm.TerminalView, coordinator: Coordinator) {
         coordinator.interactive = false
         uiView.terminalDelegate = nil
-        uiView.resignFirstResponder()
+        _ = uiView.resignFirstResponder()
         closeWhenMetalIsIdle(uiView)
     }
 

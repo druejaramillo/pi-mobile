@@ -2,7 +2,7 @@
 
 ## Readiness
 
-**Source integration checkpoint, not a device-verified release.** The Linux authoring machine now has private Swift 6.4/xtool 1.21; the Core package compiles and passes XCTest. The first actual iOS app build is blocked on Apple's SDK, and signing/physical-device access are not configured. Simulator rendering and permission compatibility remain unverified.
+**Compile/link/package checkpoint, not a device-verified release.** The private Linux Swift 6.4/xtool 1.21 lane now builds the real unsigned arm64 iPhone app with the user-supplied Xcode 27 slim SDK; full and repeated builds pass. Signing credentials are configured locally but have not been used by this diagnostic work. No phone installation/execution has occurred. Core XCTest passes; app-hosted tests, Mac/Xcode validation, rendering and actual permission compatibility remain unverified.
 
 ## Approved scope
 
@@ -14,7 +14,8 @@ Native iPhone app, direct SSH over Tailscale, existing Herdr/Pi sessions, global
 2. Native UI/session navigation scaffold: committed and pushed (`55f681d`).
 3. Host and native integration: committed and pushed (`93ae84e`) with pinned dependencies and setup documentation.
 4. Approved-boundary test suite: committed/pushed (`1c0ee29`), with 23 host tests and 25 XCTest methods.
-5. Linux xtool build/deploy lane: private verified toolchain, resolved app graph, exact SwiftTerm cross-target manifest patch, packaging and explicit USB deployment scripts. Seven Core tests compile/pass; eighteen app-hosted tests remain unrun. No iOS binary yet.
+5. Linux xtool build/deploy lane (`376f3df`): private verified toolchain, resolved graph, exact SwiftTerm cross-target manifest patch and explicit USB deployment scripts.
+6. Linux build-failure fix: private LLVM XML runtime link plus a scoped SwiftPM manifest-cache bypass. The original/repeat failures are retained as controls; four real builds now pass, including a source-timestamp rebuild. Unsigned iPhone app produced; no deployment. Seven Core tests pass; eighteen app-hosted tests remain uncompiled/unrun.
 
 ## Implemented in source
 
@@ -36,10 +37,12 @@ Native iPhone app, direct SSH over Tailscale, existing Herdr/Pi sessions, global
 - Python importer: Ruff lint and Python grammar passed. JSON/profile structure was checked; no credentials or desktop scripts were exported.
 - Seven Core XCTest methods: **compiled and passed on native Linux with Swift 6.4**. Evidence: `ios/TestResults/core-linux-runpath.log`. This does not prove any UIKit/SSH/audio path.
 - App SwiftPM manifest accepted and real dependency graph resolved, with `ios/Package.resolved` retained. SwiftTerm manifest before/after checks prove the Apple/UIKit source exclusions are removed only for the explicit cross-target build. The derived app plist retains privacy strings and has no unexpanded Xcode variables.
-- Swift 6.4 compiler **syntax-only parse** accepted all 23 app source files in Swift 5 mode. The original tree-sitter scan had only two empty-Void-tuple parser limitations. Neither check establishes app semantic compilation/API compatibility; that remains unperformed.
-- Info.plist, XcodeGen YAML and asset/profile JSON: parsed.
-- Build shell grammar and diff whitespace checks: passed. Mac script still refuses Linux with exit 2; Linux script now reaches its real SDK gate and refuses a missing Apple SDK with exit 2. Private toolchain setup and dependency preparation were rerun successfully.
-- Harness Swift lint/typecheck/LSP mapping is unavailable; actual Core compile/XCTest was run directly. Native app typechecking remains blocked on Apple's SDK. ShellCheck was initially missing; JS lint and Python typechecking have no configured lane.
+- **Actual iOS semantic compile, link and packaging passed** through `tools/build-ios-linux.sh`, including SwiftUI, UIKit/Metal SwiftTerm, Citadel/NIO, WebKit and FluidAudio/Core ML. Initial and cached-planning failures are retained alongside four successful runs under `ios/TestResults/xtool-cache-fix-*.log`. An unwrapped xtool command still fails; the scoped wrapper passes `--disable-build-manifest-caching` while retaining SwiftBuild's reusable descriptions/objects.
+- Output inspected: Mach-O arm64 executable, iOS 17 minimum, original bundle identity/iPhone-only family/privacy strings, byte-identical icon and VoxType profile, FluidAudio resource bundle, no provisioning profile. Load commands reference Apple system frameworks/libraries, not a missing third-party dynamic framework. None of this proves device loading/execution.
+- Latest regression repeats: seven Core tests passed (`core-post-sdk-fix.log`), 23 host tests passed (`host-post-sdk-fix.tap`), installed-declaration TypeScript/checkJs passed. The native warning cleanup compiled with no app-source warnings in the verified runs; a cold dependency build may still emit upstream warnings.
+- Earlier Swift syntax-only/tree-sitter scans, plist/XcodeGen YAML and asset/profile JSON parsing are retained as supplementary checks, not substitutes for compilation.
+- Build shell grammar and diff whitespace checks: passed. Setup/preparation rerun successfully without replacing the SDK or touching signing. Mac script's Linux rejection and Linux prerequisite gates were checked at the previous checkpoint; the Mac project/scripts remain unchanged.
+- Harness Swift lint/typecheck/LSP mapping is unavailable; actual app/Core builds were run directly. ShellCheck is missing; JS lint and Python typechecking have no configured lane.
 
 ## Compatibility and follow-up gates
 
@@ -50,4 +53,4 @@ Native iPhone app, direct SSH over Tailscale, existing Herdr/Pi sessions, global
 - Native visual inspection and independent finish review are blocked on actual iOS screenshots (Mac Simulator or physical phone). [DESIGN.md](../DESIGN.md) records a source baseline, not visual proof.
 - Public test interfaces are approved. Seven Core methods compile/pass on Linux; eighteen app XCTest methods remain **uncompiled/unrun**. Connected native transport, cumulative history, real permissions and successful audio/inference paths remain outside automated proof.
 
-No global Pi, Herdr, SSH, Tailscale or VoxType settings were changed; no host installation, live-session restart, model download or paid inference was performed. The authorized Linux setup added private build tools and `usbmuxd` through desktop authorization; no Apple credential, SDK, certificate or device-install action has happened. Follow [LINUX_SETUP.md](LINUX_SETUP.md) or [MAC_SETUP.md](MAC_SETUP.md) and record real results here before daily use.
+No global Pi, Herdr, SSH, Tailscale or VoxType settings were changed; no host installation, live-session restart, Parakeet model download or paid inference was performed. The authorized Linux setup added private build tools and `usbmuxd` through desktop authorization. The user subsequently supplied Apple's SDK and configured signing credentials locally; this diagnosis did not read/change credentials, create/revoke certificates, sign or deploy. Follow [LINUX_SETUP.md](LINUX_SETUP.md) or [MAC_SETUP.md](MAC_SETUP.md) and record real device results here before daily use.

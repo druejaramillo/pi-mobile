@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Bypass SwiftPM's cached cross-target build path, which probes the host ELF linker in Swift 6.4.
+# SwiftBuild descriptions/objects remain reusable; do not delete build products or alter Apple's SDK.
+set -euo pipefail
+root=$(cd "$(dirname "$0")/../.." && pwd)
+source "$root/tools/xtool-environment.sh"
+# This override selects our xtool shim, not SwiftPM's PackageDescription runtime directory.
+unset SWIFTPM_CUSTOM_BIN_DIR
+exec swift build --disable-build-manifest-caching "$@"

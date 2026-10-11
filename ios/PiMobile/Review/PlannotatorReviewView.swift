@@ -76,7 +76,7 @@ public struct PlannotatorReviewView: UIViewRepresentable {
                     view.configuration.userContentController.removeAllContentRuleLists()
                     view.configuration.userContentController.add(ruleList)
                     view.load(URLRequest(url: url))
-                    WKContentRuleListStore.default().removeContentRuleList(forIdentifier: "PiMobile-review-\(port)") { _ in }
+                    try? await WKContentRuleListStore.default().removeContentRuleList(forIdentifier: "PiMobile-review-\(port)")
                 }
             }
         }

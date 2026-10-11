@@ -2,7 +2,7 @@
 
 A native iPhone companion to **existing Herdr and Pi sessions**, reached directly over SSH/Tailscale. Local Parakeet v3 dictation. Actual Plannotator reviews inside the app. **No notifications or push service.**
 
-This repository contains an integrated source checkpoint, **not a device-verified release**. The Mac lane uses **Xcode 26+ / Swift 6.2+**. A parallel **Linux/xtool** device-build lane is now prepared, but its first app compile/deploy is blocked on Apple's SDK and signing/device setup. See [PRODUCT.md](PRODUCT.md) for the approved behavior and [bridge protocol](docs/BRIDGE_PROTOCOL.md) for the shared interface.
+This repository contains an integrated source checkpoint, **not a device-verified release**. The Mac lane uses **Xcode 26+ / Swift 6.2+**. The parallel **Linux/xtool** lane now compiles and links the real arm64 iPhone app with an Apple-supplied SDK. Signing is configured locally; installation and device behavior remain unverified. See [PRODUCT.md](PRODUCT.md) for the approved behavior and [bridge protocol](docs/BRIDGE_PROTOCOL.md) for the shared interface.
 
 ## Start on your Mac
 
@@ -24,7 +24,7 @@ The launch **Agents** tab indexes existing agents across your machines, with sta
 ./tools/build-ios-linux.sh
 ```
 
-Follow [Linux setup](docs/LINUX_SETUP.md) for the Apple-provided SDK, private toolchain, signing and explicit USB deployment. Seven Core XCTest methods already pass on this Linux machine; the actual iOS app has **not** compiled or run yet. The Mac build remains available.
+Follow [Linux setup](docs/LINUX_SETUP.md) for the Apple-provided SDK, private toolchain, signing and explicit USB deployment. Seven Core XCTest methods pass on this Linux machine, and full/repeated unsigned app builds succeed. The app has **not** been installed or run on a phone. The Mac build remains available.
 
 ## Layout
 
@@ -39,4 +39,4 @@ SSH host keys are explicitly trusted; secrets belong in iOS Keychain, never Git.
 
 ## Current verification
 
-**23 host protocol tests pass**, alongside TypeScript/JavaScript and importer checks. Seven Core XCTest methods compile and pass on Linux; eighteen app-hosted XCTest methods remain uncompiled/unrun; [testing instructions](docs/TESTING.md) describe exact coverage and limits. See [build status](docs/BUILD_STATUS.md) for exact checks, compatibility boundaries and unresolved gates. A full iOS build (Xcode or xtool) and physical iPhone pass remain required before calling this usable on-device. Do not interpret source availability as a successful native build.
+**23 host protocol tests pass**, alongside TypeScript/JavaScript and importer checks. Seven Core XCTest methods compile and pass on Linux; eighteen app-hosted XCTest methods remain uncompiled/unrun; [testing instructions](docs/TESTING.md) describe exact coverage and limits. See [build status](docs/BUILD_STATUS.md) for exact checks, compatibility boundaries and unresolved gates. The Linux iOS compile/link/package pass is verified; Mac/Xcode validation and a physical iPhone pass remain required before calling this usable on-device. Compilation is not runtime proof.

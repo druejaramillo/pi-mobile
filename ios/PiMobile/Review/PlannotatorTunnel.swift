@@ -1,5 +1,6 @@
 import Foundation
-import Citadel
+// The pinned Citadel API predates Sendable; direct-channel work is submitted to its NIO event loop.
+@preconcurrency import Citadel
 import NIOCore
 import NIOPosix
 import NIOSSH
@@ -132,7 +133,8 @@ private final class ReviewForwardingPair: @unchecked Sendable {
 }
 
 /// Manual reads apply TCP/SSH backpressure; relays carry HTTP and WebSocket bytes without interpreting either protocol.
-private final class ReviewRelayHandler: ChannelInboundHandler {
+/// Each instance belongs to one pipeline; peer-write completions return to its source event loop before touching state.
+private final class ReviewRelayHandler: ChannelInboundHandler, @unchecked Sendable {
     typealias InboundIn = ByteBuffer
     private let peer: Channel
     private var writes = 0

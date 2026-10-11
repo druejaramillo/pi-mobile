@@ -1,6 +1,6 @@
 # iOS direct SSH transport
 
-Direct SSH, terminal and review modules are integrated with the native app and shared models. Their source-checked dependencies are declared in `ios/project.yml`. Public-boundary tests are approved; native guard tests are authored but unrun, and the host protocol suite passes. See [TESTING.md](TESTING.md). This Linux host now has a private Swift 6.4/xtool toolchain, but **no Apple SDK or Xcode**; only the platform-neutral Core package has compiled. These files have not been compiled or exercised on an iPhone.
+Direct SSH, terminal and review modules are integrated with the native app and shared models. Their source-checked dependencies are declared in `ios/project.yml`. Public-boundary tests are approved; native guard tests are authored but unrun, and the host protocol suite passes. See [TESTING.md](TESTING.md). The private Linux Swift 6.4/xtool lane now compiles and links these modules in the real arm64 iOS app using the user-supplied Apple SDK. Seven Core tests pass. App-hosted XCTest, Mac/Xcode validation and actual iPhone transport behavior remain unverified.
 
 ## Public coordinator seam
 
@@ -99,6 +99,6 @@ A WKContentRuleList blocks other resource origins and loading fails closed if co
 - Source-checked the Citadel and SwiftTerm APIs above, plus NIOSSH 0.3.4 public-key/auth/channel declarations and Herdr incremental rendering.
 - Static scans found no permissive host validator, PTY API, arbitrary-loads setting, removed `getTerminal()` call, or arbitrary direct-tcpip target.
 - `code_check` reported **SKIPPED: no .swift mapping**; `code_lsp` reported **no .swift mapping**. Structural search for removed `getTerminal()` found zero matches; it is not a typecheck.
-- No transport/app Swift compile or XCTest, Simulator, actual SSH/WebKit runtime, device, UI/performance or paid experiment was run. The separate Core package now compiles and passes XCTest on Linux. Host tests use isolated external peers, not an SSH round-trip.
+- The complete native app now compiles/links/packages through the Linux iOS lane; repeated builds pass. NIO handler Sendable declarations document event-loop confinement; pinned Citadel interop uses `@preconcurrency`, not a claim that every library operation is Sendable-safe. The separate Core package passes seven XCTest methods. No app-hosted XCTest, Simulator, actual SSH/WebKit runtime, device, UI/performance or paid experiment was run. Host tests use isolated external peers, not an SSH round-trip.
 
 Next: compile/run the authored public-facade tests with Swift 6.2-capable Xcode in app Swift 5 mode. Connected-path verification remains: actual pinned-key rejection, password/encrypted-key/dual auth, cancellation during connect/login, out-of-order responses/deadlines/EOF, background/manual foreground reconnect, cumulative terminal coalescing/capacity, and real review HTTP/WebSocket/navigation/dismissal. Strict Swift 6 concurrency mode is not claimed.

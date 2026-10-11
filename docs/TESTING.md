@@ -38,6 +38,15 @@ xcrun swift test --package-path ios/PiMobileCore
 
 Seven XCTest methods cover public command identity/Unicode, UUID uniqueness, null JSON values, action text capabilities, cross-machine location identity, terminal bytes and safe integer conversion. **Compiled and passed on Linux with Swift 6.4.** Evidence: `ios/TestResults/core-linux-runpath.log`. This proves the platform-neutral Core package, not UIKit/SSH/audio or iOS execution. See [LINUX_SETUP.md](LINUX_SETUP.md) for setup.
 
+## Linux iPhone compile/link/package regression
+
+```sh
+./tools/build-ios-linux.sh
+./tools/build-ios-linux.sh
+```
+
+Both real builds must exit zero and validate the unsigned app's identity, iPhone-only family, executable, icon and exact dictation profile. Repeating matters: Swift 6.4's default cached cross-target path reproduced a wrong-linker JSON-probe failure after a successful first build. The script now bypasses SwiftPM's affected manifest cache while retaining reusable SwiftBuild descriptions/objects. See [LINUX_SETUP.md](LINUX_SETUP.md) for the fix and retained failing/passing evidence. Four real builds passed, including a source-timestamp rebuild. This does not run iOS code or the app-hosted tests.
+
 ## Native session and dictation — Xcode Simulator
 
 Use Xcode 26+ / Swift 6.2+, XcodeGen, and a **fresh Simulator with no saved machines**. The app-hosted test target launches the real app; a previously configured Simulator can otherwise trigger its normal foreground machine refresh.

@@ -1,13 +1,13 @@
 # Linux build and iPhone deployment with xtool
 
-This is a parallel **physical-iPhone** build lane. The XcodeGen/Mac project remains unchanged. **No iOS app binary has been built or installed yet:** the Apple SDK and signing/device prerequisites are still missing. See [BUILD_STATUS.md](BUILD_STATUS.md).
+This is a parallel **physical-iPhone** build lane. The XcodeGen/Mac project remains unchanged. **The real unsigned arm64 app now builds successfully, including repeat builds.** The user supplied Apple's SDK and configured signing credentials locally. No installation or iPhone runtime verification has occurred. See [BUILD_STATUS.md](BUILD_STATUS.md).
 
 ## What is ready on this machine
 
 - Private Swift 6.4.0 compiler and xtool 1.21.0, under `~/.local/share/pi-mobile/toolchains/`.
 - Compiler/xtool downloads verified; Ubuntu ncurses and Arch XML compatibility libraries are private to the compiler, not fake system-library symlinks. No shell profile or global Swift installation changed.
 - `usbmuxd` 1.1.1-4 installed through desktop authorization. Existing libimobiledevice tooling remains available.
-- Seven Core XCTest methods compile and pass on native Linux. The app dependency graph resolves and its manifest is accepted; **that is not an iOS compile**.
+- User-supplied Xcode 27 slim SDK installed. Seven Core XCTest methods pass on native Linux; the complete iOS app and native dependencies compile/link/package successfully.
 - `ios/Package.swift`, `ios/Package.resolved` and `ios/xtool.yml`; the existing microphone/local-network privacy strings, iPhone-only family, icon and VoxType profile are retained.
 - Exact original SwiftTerm revision plus a small checked-in manifest patch. `SWIFTTERM_TARGET_APPLE=1` includes Apple/UIKit sources when the manifest runs on Linux; ordinary host builds keep their original exclusions. No terminal implementation or dependency revision is changed.
 - FluidAudio's supported `traits: []` disables its optional **TTS** NeMo normalizer. Parakeet ASR and our deterministic VoxType cleanup remain unchanged. SwiftPM nevertheless downloaded/checksummed the declared 87 MB xcframework during resolution; disabled linkage is **not** proof that no binary was fetched. Parakeet model weights were not downloaded.
@@ -50,7 +50,24 @@ Expected output after a successful build:
 - `ios/xtool/PiMobile.app` — unsigned device app.
 - `ios/TestResults/xtool-build-<UTC timestamp>.log` — real build evidence.
 
-**The current run stops at “missing Apple SDK.”** FluidAudio/Core ML, native SwiftUI/Citadel/SwiftTerm compilation and framework/resource packaging still need this first full build and then device verification. Mac-only Simulator/app-hosted XCTest cannot be replaced by Linux syntax checks.
+**Verified:** full and repeated builds succeed, including a source-timestamp rebuild. The output is a Mach-O arm64 executable targeting iOS 17, with the exact icon/dictation profile and FluidAudio resource bundle. No third-party dynamic framework is required by its load commands. This is compile/link/package evidence, not device execution or an app-hosted XCTest pass.
+
+### If an earlier checkout failed at `ld.lld -version_details`
+
+Update the checkout, then rerun:
+
+```sh
+./tools/setup-ios-linux.sh
+./tools/build-ios-linux.sh
+./tools/build-ios-linux.sh
+```
+
+Rerunning setup without `--sdk` preserves the installed SDK and signing credentials. Two failures were reproduced and fixed:
+
+- The private LLVM linker could not load `libxml2.so.2`. Setup now exposes the verified compatibility library in LLVM's own RUNPATH as well as Swift's.
+- Swift 6.4's cached cross-target build path probed the Linux ELF linker with a Darwin-only option. The build script uses xtool's supported custom-bin seam to pass `--disable-build-manifest-caching` to SwiftPM. The shims clear that override before invoking Swift so it cannot redirect the manifest runtime. SwiftBuild descriptions and compiled objects remain reusable; no build-directory deletion, SDK patch, compiler replacement or signing change is needed.
+
+Use the repository build script, not bare `xtool dev build`, until this version-specific caching workaround can be removed. The unwrapped command was retained as a failing control; the fixed command passed four runs.
 
 ## 4. Configure signing yourself
 
@@ -90,7 +107,7 @@ swift test --package-path ios/PiMobileCore --jobs 4
 npm --prefix host test
 ```
 
-Existing evidence under ignored `ios/TestResults/` includes `core-linux-runpath.log` (7 passing XCTest methods), `xtool-package-resolve.log`, `xtool-package-description.json`, `swiftterm-manifest-before.json`, `swiftterm-manifest-after.json` and `xtool-build-prerequisites.log`. Model-manifest inclusion and dependency resolution are not full UIKit/Metal/device proof.
+Evidence under ignored `ios/TestResults/` includes `xtool-repro-first.log` (original failure), `linker-probe-linux.stderr`, `xtool-default-cache-contrast.log` (failing unwrapped control), `xtool-cache-fix-first-isolated.log`, `xtool-cache-fix-repeat.log`, `xtool-cache-fix-third.log` and `xtool-cache-fix-source-repeat.log` (successful real builds), plus `core-post-sdk-fix.log` (7 passing tests) and `host-post-sdk-fix.tap` (23 passing tests). The SwiftTerm manifest before/after evidence is also retained. Build evidence is not UIKit/Metal/device-runtime proof.
 
 Once installed, run the real-device checklist in [MAC_SETUP.md](MAC_SETUP.md): same-agent prompting/dialogs, disconnect ownership, host-key rejection, control/takeover, real review assets/WebSockets, offline Parakeet capture/inference/cancellation/cap delivery, memory/thermals and light/dark/accessibility. No live host agent is installed/restarted by these build/deploy commands.
 

@@ -71,9 +71,15 @@ if [[ -e /etc/arch-release ]]; then
 			ln -s "../../../../../compat/$target" "$runtime/$library"
 		fi
 	done
+	# LLVM's lld uses ../lib, not Swift's ../lib/swift/linux runtime path.
+	llvm_runtime="$pi_mobile_toolchain_root/swift-6.4.0-RELEASE-ubuntu22.04/usr/lib"
+	if [[ ! -e "$llvm_runtime/libxml2.so.2" && ! -L "$llvm_runtime/libxml2.so.2" ]]; then
+		ln -s ../../../compat/usr/lib/libxml2.so.2 "$llvm_runtime/libxml2.so.2"
+	fi
 fi
 source "$root/tools/xtool-environment.sh"
 swift --version
+"$pi_mobile_swift_bin/ld.lld" --version
 xtool --version
 if [[ -n $sdk_path ]]; then
 	sdk_status=$(xtool sdk status)

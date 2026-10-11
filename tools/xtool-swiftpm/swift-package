@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# xtool's SWIFTPM_CUSTOM_BIN_DIR routes package commands as well as builds; preserve their arguments.
+set -euo pipefail
+root=$(cd "$(dirname "$0")/../.." && pwd)
+source "$root/tools/xtool-environment.sh"
+# This override selects our xtool shim, not SwiftPM's PackageDescription runtime directory.
+unset SWIFTPM_CUSTOM_BIN_DIR
+exec swift package "$@"

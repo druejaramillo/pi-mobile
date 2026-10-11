@@ -38,7 +38,7 @@ Herdr owns terminal processes and topology. Pi owns each conversation, commands,
 
 ## Evidence on Hand
 
-Inspected local Herdr 0.9.1 terminal stream/API schema, Pi 1.1.0 extension API, pi-permission-system 40.1.3 dialog implementation and local Plannotator metadata publisher. VoxType configuration was inspected read-only. The platform-neutral Core package compiles and passes seven XCTest methods on Linux with Swift 6.4. No iOS app/device build has completed: the xtool lane currently lacks Apple's SDK and signing/device setup.
+Inspected local Herdr 0.9.1 terminal stream/API schema, Pi 1.1.0 extension API, pi-permission-system 40.1.3 dialog implementation and local Plannotator metadata publisher. VoxType configuration was inspected read-only. The platform-neutral Core package compiles and passes seven XCTest methods on Linux with Swift 6.4. The Linux xtool lane compiles, links and packages an unsigned arm64 iPhone app with the user-supplied Apple SDK; repeated builds pass. Signing credentials are configured locally, but no installation or iPhone runtime verification has occurred.
 
 ## Product Principles
 

@@ -34,7 +34,8 @@ export SWIFTTERM_TARGET_APPLE=1
 mkdir -p "$root/ios/TestResults"
 log="$root/ios/TestResults/xtool-build-$(date -u +%Y%m%dT%H%M%SZ).log"
 cd "$root/ios"
-xtool dev build --configuration debug 2>&1 | tee "$log"
+# xtool's supported custom-bin seam bypasses SwiftPM's broken cross-target manifest cache.
+SWIFTPM_CUSTOM_BIN_DIR="$root/tools/xtool-swiftpm" xtool dev build --configuration debug 2>&1 | tee "$log"
 python3 - "$root" <<'PY'
 import pathlib, plistlib, sys
 root = pathlib.Path(sys.argv[1])

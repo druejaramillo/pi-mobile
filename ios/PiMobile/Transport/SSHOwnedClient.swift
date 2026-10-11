@@ -39,7 +39,8 @@ struct SSHOwnedClient {
 }
 
 /// Authentication readiness observes the real NIOSSH success event after host pin validation.
-private final class SSHAuthenticationReadiness: ChannelInboundHandler {
+/// After pipeline installation, mutable state and the deadline are confined to that channel's event loop.
+private final class SSHAuthenticationReadiness: ChannelInboundHandler, @unchecked Sendable {
     typealias InboundIn = Any
     private let authenticated: EventLoopPromise<Void>
     private var completed = false
