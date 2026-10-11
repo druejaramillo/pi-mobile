@@ -29,4 +29,8 @@ The user requested native Liquid Glass, a prettier interface and a more magical 
 
 ## Verification state
 
-No native render has been captured for this refresh. Source-level documentation and arm64 compilation must not be presented as visual proof. Native light/dark, keyboard, landscape and accessibility-size inspection remain required on the Mac Simulator or physical iPhone.
+The refreshed app compiles, links and packages for arm64 iPhone through the Linux lane. Thirteen platform-neutral Core tests pass; these do not exercise the UI. Evidence includes `ios/TestResults/xtool-build-20261011T080147Z.log` and the source-derived system in [DESIGN.md](../DESIGN.md).
+
+An independent source review found accessory-height overflow risk and unconditional bottom anchoring that bypassed Follow output. Both named findings were scored resolved at source scope after the fixes; no full-surface visual approval is implied.
+
+No native render has been captured for this refresh. The finish-review disposition is **recapture**: native screenshots are required before a visual verdict. Native light/dark, keyboard, landscape, accessibility-size, Reduce Motion, Reduce Transparency and increased-contrast inspection remain required on the Mac Simulator or physical iPhone. No deployment or device interaction test was performed in this UI-refresh session.

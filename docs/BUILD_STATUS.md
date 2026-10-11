@@ -51,6 +51,14 @@ Thirteen Core tests pass (`ios/TestResults/core-key-paste-final.log`), and initi
 - Build shell grammar and diff whitespace checks: passed. Setup/preparation rerun successfully without replacing the SDK or touching signing. Mac script's Linux rejection and Linux prerequisite gates were checked at the previous checkpoint; the Mac project/scripts remain unchanged.
 - Harness Swift lint/typecheck/LSP mapping is unavailable; actual app/Core builds were run directly. ShellCheck is missing; JS lint and Python typechecking have no configured lane.
 
+## Liquid Glass UI source checkpoint
+
+The native material refresh is committed/pushed in `89497f3` (shared glass styles, status capsules, directory and settings craft) and `cbb1bb2` (floating composer, transcript styling, dictation controls, terminal keys and bounded dialog/accessory layout). iOS 26 uses Apple's glass APIs; iOS 17–25 retain native fallbacks. Navigation, host-owned permissions, terminal control and explicit draft sending remain intact in source.
+
+The refreshed app's actual arm64 compile/link/package passes, including two source-change rebuilds: `ios/TestResults/xtool-build-20261011T075958Z.log` and `ios/TestResults/xtool-build-20261011T080147Z.log`. Thirteen current platform-neutral Core tests pass. The harness Swift checker remains unavailable; the real cross-build is the compile evidence, not a skipped check.
+
+The independent source reviewer scored both named accessory-overflow and Follow-output findings resolved after corrections. **Native finish-review disposition: recapture.** No actual refresh screenshots, UI runtime tests or deployment occurred in this session; no visual ship verdict exists. [DESIGN.md](../DESIGN.md), its native sidecar and the [inspection checklist](TESTING.md#liquid-glass--required-native-inspection) describe the source system and remaining native checks without treating compilation as appearance proof.
+
 ## Compatibility and follow-up gates
 
 - Host source targets Node 22.19+, Herdr 0.9.1 and Pi 1.1.0. Node/Herdr must be available in noninteractive SSH's PATH; no per-profile Node override is implemented.

@@ -77,6 +77,22 @@ The Linux lane compiles the real SwiftUI paste controls but cannot exercise iOS 
 
 These interaction and connected-path checks remain **unrun**; the Core tests and cross-build are not substitutes.
 
+## Liquid Glass — required native inspection
+
+The UI refresh compiles, links and packages for arm64 iPhone with the supplied Apple SDK. Evidence: `ios/TestResults/xtool-build-20261011T080147Z.log`. Native material and interaction quality remain unverified; the independent finish-review disposition is **recapture**, not ship. The separate source reviewer scored the two named accessory-containment/Follow-output findings resolved at source scope only.
+
+On the Simulator or deliberately installed iPhone build, capture the actual screens in light/dark appearance, portrait/landscape, standard/largest Dynamic Type and with the keyboard visible. Also check Reduce Motion, Reduce Transparency and increased contrast:
+
+- Agents, Machines and Settings retain native navigation and readable rows. Status includes text and a symbol; inaccessible/cached hosts never appear ready or empty merely because a check failed.
+- The floating composer, separate Send control and terminal keys use native Liquid Glass on iOS 26. iOS 17–25 use native material/bordered fallbacks. Transcript and permission explanations remain opaque. Every control is reachable and at least 44pt.
+- Narrow/large-text layouts keep the editor, delivery mode, dictation/cancel and Send usable. Very short keyboard-safe viewports let the complete accessory scroll rather than clip controls. Back gestures and interactive keyboard dismissal still work.
+- Turn Follow output off while content grows: the transcript must not jump to the bottom. Turn it on again: the latest response becomes visible.
+- Type a draft, open commands, select one, dictate editable text and cancel a recording. Transcription inserts once into the owning draft and never sends automatically. A successful send clears only the submitted draft and gives feedback after host acknowledgment; failed/uncertain delivery remains explicit and is not retried.
+- A live supported dialog retains its exact action labels, original prompt, reason/value entry, grant widths and confirmation stages. All content and actions remain reachable with the keyboard and large text. Glass styling must not favor a permission outcome.
+- Terminal observation stays read-only, control remains explicit and takeover/Stop retain their confirmations. Review dismissal returns to the same agent.
+
+Use dedicated disposable sessions for mutation checks. No screenshots, UI runtime checks or deployments were performed for this refresh; compilation and Core tests are not substitutes.
+
 ## Still outside automated proof
 
 - Connected native SSH correlation/deadlines/cancellation, host-key rejection against an actual server, password/encrypted-key authentication and foreground/background reconnect.
