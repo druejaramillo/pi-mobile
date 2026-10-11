@@ -97,12 +97,9 @@ struct MachineEditorView: View {
                     let access = url.startAccessingSecurityScopedResource()
                     defer { if access { url.stopAccessingSecurityScopedResource() } }
                     let values = try url.resourceValues(forKeys: [.fileSizeKey])
-                    guard (values.fileSize ?? 0) <= 131_072 else { throw MachineFormError.invalid("SSH key file is too large.") }
+                    guard (values.fileSize ?? 0) <= MachineKeyCredential.maximumBytes else { throw MachineKeyCredentialError.tooLarge }
                     let imported = try String(contentsOf: url, encoding: .utf8)
-                    guard imported.contains("-----BEGIN OPENSSH PRIVATE KEY-----") else {
-                        throw MachineFormError.invalid("Choose an OpenSSH Ed25519 private key, not a public key.")
-                    }
-                    secret = imported
+                    secret = try MachineKeyCredential(privateKey: imported).privateKey
                 } catch { self.error = error.localizedDescription }
             }
             .confirmationDialog("Remove this machine from Pi Mobile?", isPresented: $confirmRemove, titleVisibility: .visible) {
@@ -137,9 +134,8 @@ struct MachineEditorView: View {
             }
             if !secret.isEmpty {
                 let credential: String
-                if authentication == "key", !keyPassphrase.isEmpty {
-                    let bundle = BridgeJSON.object(["privateKey": .string(secret), "passphrase": .string(keyPassphrase)])
-                    credential = String(decoding: try JSONEncoder().encode(bundle), as: UTF8.self)
+                if authentication == "key" {
+                    credential = try MachineKeyCredential(privateKey: secret).keychainSecret(passphrase: keyPassphrase)
                 } else { credential = secret }
                 try MachineSecretStore.saveSecret(credential, machineId: machineId)
             }

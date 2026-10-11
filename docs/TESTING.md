@@ -26,7 +26,7 @@ Fixtures create their own child processes, Herdr socket and temporary directorie
 
 These peers are not the installed Herdr/TUI implementation. In particular, **native permission-component parsing, double confirmation, scope/audit behavior and desktop races still need verification against the actual package**. A synthetic permission component is intentionally not used to manufacture that proof.
 
-## Native models — Swift package on Linux or Mac
+## Native models and machine credentials — Swift package on Linux or Mac
 
 ```sh
 # Linux, using the prepared private compiler:
@@ -36,7 +36,9 @@ swift test --package-path ios/PiMobileCore --jobs 4
 xcrun swift test --package-path ios/PiMobileCore
 ```
 
-Seven XCTest methods cover public command identity/Unicode, UUID uniqueness, null JSON values, action text capabilities, cross-machine location identity, terminal bytes and safe integer conversion. **Compiled and passed on Linux with Swift 6.4.** Evidence: `ios/TestResults/core-linux-runpath.log`. This proves the platform-neutral Core package, not UIKit/SSH/audio or iOS execution. See [LINUX_SETUP.md](LINUX_SETUP.md) for setup.
+**Thirteen XCTest methods compiled and passed on Linux with Swift 6.4.** Seven cover public command identity/Unicode, UUID uniqueness, null JSON values, action text capabilities, cross-machine location identity, terminal bytes and safe integer conversion. Six exercise the machine editor's public `MachineKeyCredential` preparation seam: imported/pasted line endings, public/truncated/malformed input rejection, exact passphrase preservation, UTF-8 byte limits, total credential-bundle limits and JSON escaping expansion. These use synthetic armor/base64, not real private keys; Ed25519 parsing and decryption remain transport checks.
+
+Evidence: `ios/TestResults/core-key-credential.log`. This proves the platform-neutral Core package, not clipboard interaction, Keychain, UIKit/SSH/audio or iOS execution. See [LINUX_SETUP.md](LINUX_SETUP.md) for setup.
 
 ## Linux iPhone compile/link/package regression
 
