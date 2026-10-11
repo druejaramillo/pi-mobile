@@ -1,6 +1,6 @@
 # iOS direct SSH transport
 
-Direct SSH, terminal and review modules are integrated with the native app and shared models. Their source-checked dependencies are declared in `ios/project.yml`. Public-boundary tests are approved; native guard tests are authored but unrun, and the host protocol suite passes. See [TESTING.md](TESTING.md). The private Linux Swift 6.4/xtool lane now compiles and links these modules in the real arm64 iOS app using the user-supplied Apple SDK. Thirty-eight Core tests, two Go/C boundary regressions and the loopback SSH regression pass. Tailscale profiles now sign in through the embedded foreground-only node and verify host identity automatically; see [embedded client](TAILSCALE_CLIENT.md). The user now reports a working connection with offline/cached directory status. Foreground-status fix `c3ab742` is built, not yet deployed or verified on the phone; app-hosted XCTest and Mac/Xcode validation remain unrun.
+Direct SSH, terminal and review modules are integrated with the native app and shared models. Their source-checked dependencies are declared in `ios/project.yml`. Public-boundary tests are approved; native guard tests are authored but unrun, and the host protocol suite passes. See [TESTING.md](TESTING.md). The private Linux Swift 6.4/xtool lane now compiles and links these modules in the real arm64 iOS app using the user-supplied Apple SDK. Thirty-eight Core tests, two Go/C boundary regressions and the loopback SSH regression pass. Tailscale profiles now sign in through the embedded foreground-only node and verify host identity automatically; see [embedded client](TAILSCALE_CLIENT.md). The user now reports a working connection with offline/cached directory status. Foreground-status fix `c3ab742` is installed in place after authorization, but its phone behavior remains unverified; app-hosted XCTest and Mac/Xcode validation remain unrun.
 
 ## Public coordinator seam
 
@@ -32,7 +32,7 @@ Every request uses a new UUID, has a 30-second deadline and is correlated by id.
 
 `PaneDetailView` owns a unique subscription owner. Preparing that owner waits for the previous view's detach acknowledgement; releasing it sends `terminal.detach` and `agent.detach`, not `disconnect`. The Core `PaneSubscriptionLifecycle` serializes cleanup, ignores stale/duplicate dismissal and rejects concurrent ownership. If release cannot be confirmed, the facade closes its owned socket fail-closed. Agent/control attachment remains deliberate and background still disconnects the whole machine. No Pi turn, desktop dialog, Herdr session or host process is stopped by pane dismissal.
 
-This keeps the foreground directory connected while a pane's subscriptions are released. Real loss/backgrounding still shows stale cached navigation. Tests cover the public lifecycle actions and actual host protocol, not native SwiftUI rendering; see [current checkpoint](BUILD_STATUS.md#foreground-directory-status--built-not-installed).
+This keeps the foreground directory connected while a pane's subscriptions are released. Real loss/backgrounding still shows stale cached navigation. Tests cover the public lifecycle actions and actual host protocol, not native SwiftUI rendering; see [current checkpoint](BUILD_STATUS.md#foreground-directory-status--installed).
 
 ## Required parent dependencies and settings
 

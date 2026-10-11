@@ -4,15 +4,15 @@
 
 Start here for machine/workspace/tab browsing. You do **not** need to create or restart a Herdr session, load a Pi extension, or run `npm ci` for this step.
 
-1. On the host, have this repository available. An existing checkout is enough: the adapter is `host/bridge-cli.mjs` and uses the adjacent `host/lib/` directory. Its runtime needs Node 22.19+ and Herdr in the SSH account's noninteractive PATH; it does not need npm dependencies.
+1. On the host, deliberately install the user-wide runtime with `./tools/install-host.sh` from this checkout, using the SSH account that owns the Herdr session—not sudo. This copies the runtime to `~/.local/share/pi-mobile/host/` and adds the user-wide Pi loader. Node 22.19+ and Herdr must be in that account's noninteractive PATH; no npm dependencies are required. Using the checkout directly is an optional development shortcut, not the normal installation.
 2. Find the existing session with `herdr session list --json`. Use a name whose `running` value is `true`. The ordinary unnamed session is `default`.
 3. On the phone, edit/add the machine with its **Tailscale name or address** and **Host username**. The username must be the host account that owns the Herdr session. Tailscale SSH must already be enabled and allow Pi Mobile's identity to use that username; see below if it is not.
-4. Expand **Host bridge**. Set **Herdr session** to the existing name. Set **Bridge path relative to home** to the actual checkout path—not a shell command. For a checkout at `$HOME/Projects/pi-mobile`, enter `Projects/pi-mobile/host/bridge-cli.mjs`. An absolute path is accepted too. The default `.local/share/pi-mobile/host/bridge-cli.mjs` is only a suggested location; the app does not create or populate it.
+4. Expand **Host bridge**. Set **Herdr session** to the existing name and **Bridge path relative to home** to `.local/share/pi-mobile/host/bridge-cli.mjs`—the app's default, now populated by the explicit installer. Do not paste a shell command. If an older saved machine points into the checkout, it still works; change that field deliberately to use the installed snapshot. An absolute path is also accepted.
 5. Save and retry the connection. The app starts only its short-lived SSH adapter and reads the existing session. It does not install software, start a Herdr server or restart panes.
 
 If the adapter file is missing at the saved path, Node can exit 1 before the bridge handshake. Fix that path rather than resetting Tailscale, deleting the saved machine or reinstalling the phone app. A valid path alone does not prove SSH PATH, policy or session availability; check the exact error if connecting still fails.
 
-**Native Pi conversation/dialog controls are a separate step.** Connecting to Herdr and viewing workspaces does not require the Pi Mobile extension. Native Pi controls require loading `host/pi-mobile-extension.ts` in the deliberately chosen Pi process, as described below. Do not restart/reload all existing agents just to connect the machine.
+**Native Pi conversation/dialog controls require activation in Pi.** The installer adds `~/.pi/agent/extensions/pi-mobile.ts`, a loader for the installed runtime across projects. Existing Pi processes still need a deliberate `/reload` in each chosen terminal; new Pi invocations discover it normally. Connecting to Herdr and viewing workspaces does not require that activation. Do not restart/reload all existing agents just to connect the machine.
 
 ## Compatibility boundary
 
@@ -65,47 +65,39 @@ Existing saved fields and Keychain credentials are not reset. Saved Tailscale pr
 
 ## Install deliberately (never automatic)
 
-Review `host/` before enabling it. For basic Herdr browsing, use the existing checkout path as above; there is no additional npm installation step. The following installs pinned development/checking dependencies, not the runtime bridge or a background service:
+Review `host/` before enabling it. Install once per host **account**, so it works across projects independently of the development checkout:
 
 ```sh
-cd /path/to/pi-mobile/host
-npm ci --ignore-scripts --legacy-peer-deps
+cd /path/to/pi-mobile
+./tools/install-host.sh
 ```
 
-Dependencies are exactly pinned in `host/package-lock.json`; runtime uses only Node built-ins and the Pi extension API. No second Pi package is installed or bundled.
+The installer copies only the runtime: `bridge-cli.mjs`, `pi-mobile-extension.ts`, `package.json` and the supporting `lib/` tree into `~/.local/share/pi-mobile/host/`. It creates `~/.pi/agent/extensions/pi-mobile.ts`, which imports that installed snapshot—not the checkout. No sudo, npm installation, second Pi package, daemon, background service or model client is needed. Existing Pi settings, unrelated extensions, toolchains and sessions are untouched.
 
-### Enable an existing Pi process in this checkout
+A byte-matching rerun is a no-op. Different existing targets, symlink/foreign-owned parents and custom Pi agent directories are refused for explicit review rather than overwritten. To update a differing installation, deliberately back up the old runtime and loader outside Pi's extension discovery directory before rerunning; the installer does not silently upgrade loaded code. Remove duplicate project-local Pi Mobile opt-ins deliberately so the extension is not loaded twice.
 
-The extension already exists at `host/pi-mobile-extension.ts`. To enable it only for Pi processes using this project, create a **new** `.pi/extensions/pi-mobile.ts` in the checkout (do not overwrite an existing extension):
+### Activate the installed extension in an existing Pi process
 
-```ts
-export { default } from '../../host/pi-mobile-extension.ts';
-```
-
-The project-local wrapper is developer runtime configuration and is ignored by Git. Pi loads it on the next startup or deliberate reload; creating the file does not activate it in running agents.
+Installing the user-wide loader does not activate it in an already-running Pi process. The earlier project-local wrapper was a development shortcut; it is not needed with the user-wide installation.
 
 1. In the **chosen existing Pi terminal**, let the active turn finish and close any active dialog.
 2. Enter **`/reload`** there. This keeps that Pi's session/history but reloads its extensions; it does not restart Herdr or other Pi processes. Do not send it to every agent.
 3. On the phone, refresh the machine and open the pane containing that Pi process. Native conversation controls should become available once its `pi_mobile` token is advertised. If they do not, preserve the terminal fallback and check host setup; do not restart sessions or weaken identity verification.
 
-No npm install, new Pi process or model client is required for this opt-in. For other projects, choose their opt-in separately rather than changing global Pi settings automatically.
+No npm install, new Pi process or model client is required for activation. Pi/Herdr remain the conversation/process owners. Reload only the processes you choose.
 
-### Opt in for a new Pi invocation
+### New Pi invocations and development-only alternatives
 
-To opt in for a **new, explicitly chosen** Pi invocation inside a Herdr pane:
+After user-wide installation, an explicitly chosen new Pi invocation inside a Herdr pane uses ordinary `pi` startup and discovers the loader across projects. Do not also pass the extension explicitly or add a duplicate project wrapper.
 
-```sh
-pi --extension /path/to/pi-mobile/host/pi-mobile-extension.ts
-```
-
-Alternatively the user may install the local host package through Pi's normal package settings. Do not copy/reload installed extensions or alter existing sessions automatically. Pi/Herdr remain the conversation/process owners.
+Without the user-wide loader, development can instead use `pi --extension /path/to/pi-mobile/host/pi-mobile-extension.ts` for one deliberately chosen invocation, or Pi's local-package settings. Those alternatives are not the recommended host installation. Neither installation nor activation is automatic.
 
 The extension requires inherited `HERDR_ENV=1`, `HERDR_SOCKET_PATH`, and `HERDR_PANE_ID`. It resolves `pane.current` against the inherited caller identity, including after a pane move. There is no UI-focus fallback. Native permission version detection reads only the public package manifest at `~/.pi/agent/npm/node_modules/@gotgenes/pi-permission-system/package.json`. For another installation layout, set `PI_MOBILE_PERMISSION_PACKAGE` to that package's directory **in the Pi process environment**. It never reads permission configuration or private component state.
 
-In the phone's **Host bridge** settings, enter the actual checkout's `/path/to/pi-mobile/host/bridge-cli.mjs` as **Bridge path**, and the explicit existing session name as **Herdr session**. The default `.local/share/pi-mobile/host/bridge-cli.mjs` is relative to the remote account's home; it is not an installed or downloaded bridge. Do not paste a full shell command into the path field. The corresponding exec command is:
+In the phone's **Host bridge** settings, enter `.local/share/pi-mobile/host/bridge-cli.mjs` as **Bridge path relative to home**, and the explicit existing session name as **Herdr session**. The installer populates this path; the phone never installs or downloads the bridge. Do not paste a full shell command into the path field. The corresponding exec command is:
 
 ```sh
-node /path/to/pi-mobile/host/bridge-cli.mjs --session default
+node "$HOME/.local/share/pi-mobile/host/bridge-cli.mjs" --session default
 ```
 
 Use the real configured session name; `default` is an example. Names must be 1–64 ASCII letters/digits/underscore/hyphen, starting with a letter or digit. SSH must use **exec without a PTY** (`ssh -T` for manual use), never a shell/PTY terminal channel. The native client currently invokes `node` from the SSH account's **noninteractive PATH**; confirm that this PATH contains the required Node and Herdr before connecting. A per-profile Node executable override is not implemented. Choose any host PATH changes yourself; this repository never makes them automatically. An optional administrator-owned `PI_MOBILE_HERDR_BIN` chooses an executable; it is passed to `spawn`, not a shell. The phone cannot choose executables, socket paths, or arbitrary URLs.
@@ -135,6 +127,8 @@ Deliberately check the chosen host/account's actual bridge path, Node 22.19+ and
 
 ## Static verification
 
+Development/checking dependencies are separate from the installed runtime. In the checkout's `host/` directory, run `npm ci --ignore-scripts --legacy-peer-deps` only when you want to check or test source; its pinned lockfile is not a runtime installation requirement.
+
 Point the checker at the exact **installed** Pi package directory, not at its `dist` subdirectory:
 
 ```sh
@@ -143,4 +137,4 @@ PI_MOBILE_PI_ROOT=/path/to/node_modules/@earendil-works/pi-coding-agent npm run 
 
 This performs strict TypeScript/checkJs validation against Pi's actual declarations without creating another Pi or calling a model. The temporary local typecheck configuration is removed afterward. JavaScript syntax can also be checked with `node --check` on `host/*.mjs` and `host/lib/*.mjs`.
 
-The approved host protocol suite now passes 24 tests (`npm test`) against the real CLI/extension and isolated external Pi/Herdr peers. See [TESTING.md](TESTING.md). It exercises reconnect/duplicate/stale-dialog guards and control sequencing without touching live sessions or calling a model. It does **not** prove actual permission-component rendering or audit/scoping behavior. The iOS app compiles/links/packages. The user now reports a working connection after correcting the checkout path, but stale/offline directory status. The foreground-status fix is built, not yet deployed or verified on the phone. No live permission interaction or independently correlated iPhone SSH/bridge round-trip is verified. Use deliberately chosen dedicated sessions for those checks before daily use.
+The approved host protocol suite now passes 24 tests (`npm test`) against the real CLI/extension and isolated external Pi/Herdr peers. See [TESTING.md](TESTING.md). It exercises reconnect/duplicate/stale-dialog guards and control sequencing without touching live sessions or calling a model. It does **not** prove actual permission-component rendering or audit/scoping behavior. The iOS app compiles/links/packages. The user now reports a working connection after correcting the checkout path, but stale/offline directory status. The foreground-status fix has been installed in place after authorization, but its phone behavior remains unverified. No live permission interaction or independently correlated iPhone SSH/bridge round-trip is verified. Use deliberately chosen dedicated sessions for those checks before daily use.

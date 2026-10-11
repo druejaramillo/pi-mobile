@@ -26,6 +26,16 @@ Fixtures create their own child processes, Herdr socket and temporary directorie
 
 These peers are not the installed Herdr/TUI implementation. In particular, **native permission-component parsing, double confirmation, scope/audit behavior and desktop races still need verification against the actual package**. A synthetic permission component is intentionally not used to manufacture that proof.
 
+## User-wide host installation — isolated account directories
+
+```sh
+python3 tools/test-host-install.py
+```
+
+Eight public CLI cases pass on Node 24.20.0: installed runtime bytes and checkout independence, loader/factory hooks without a session start, matching-repeat no-op, preservation of existing runtime/extension, symlink parent/target refusal, unknown argument and custom agent-directory refusal. Temporary HOME paths include spaces. No live Herdr/Pi, package download or actual account installation is performed by these tests. Node 26 passes the seven filesystem cases and explicitly skips the direct factory probe: Node 26 removed the transformation flag used by this Node-only probe, whereas Pi uses jiti to load extensions. A skip is not activation proof.
+
+The separately authorized real installation also passed byte comparisons, Node 24 factory-load registration and installed JavaScript syntax checks. A read-only `hello`/`snapshot` probe against the installed adapter in a clean noninteractive Node 26 environment read the existing session. It did not attach to or mutate an agent and does not prove phone SSH or actual Pi `/reload`. Evidence: `ios/TestResults/host-install-regression-final.log`, `host-install-node26-regression.log`, `pi-extension-global-load.log`, `installed-host-readonly-final.log`.
+
 ## Native models and legacy machine credentials — Swift package on Linux or Mac
 
 ```sh
@@ -119,7 +129,7 @@ The Linux lane compiles the simplified native form but cannot prove its iPhone b
 - Relaunch with the saved profile, background/foreground and explicitly refresh: no crash, no secret lookup for keyless profiles and no mutation replay.
 - With foreground-status fix `c3ab742`, edit and save the retained machine, then refresh **without leaving the open browser**: the screen observes the same connection and no longer stays offline/cached after a successful snapshot. Cancel must change nothing. Navigate into a pane and back: the directory stays connected, while this pane's agent/terminal subscriptions and input control are released. Rapidly open a different pane: an old dismissal must not detach it. Real disconnects/backgrounding still show cached/offline state and must never replay a mutation.
 
-The user reports successful in-app sign-in and adding a machine on installed build `02eaf97`, followed by a connection failure. This is limited human evidence, not a successful connected/device/visual pass. The later exec-cleanup fix `9c45770` has now been installed once, in place, after explicit authorization; pairing/Developer Mode and installer verification succeeded (`ios/TestResults/ssh-exec-device-install-20261011.md`). No uninstall, state/sign-in reset, host change or app launch was performed. The retained-machine retry and remaining checks above still need verification. Twenty-six Core tests, two Go/C regressions, the real loopback SSH regression and cross-build are not substitutes. The user subsequently authorized an in-place USB update of keyless build `440e66d`; installation and installer verification succeeded (`ios/TestResults/deploy-keyless-tailscale-20261011T090750Z.log`). No uninstall/data reset or launch verification was performed. Installation is not proof of the checks above.
+The user reports successful in-app sign-in and, after fixing the bridge path, a working connection with offline/cached directory status. Foreground-status fix `c3ab742` has now been installed once in place after fresh authorization; pairing/Developer Mode and installer verification succeeded (`ios/TestResults/foreground-status-device-install-20261011.md`). No uninstall, state/sign-in reset, app launch or live-agent reload was performed. The separately authorized user-wide host runtime/loader installation passed read-only checks. The remaining native checks above still need verification; 38 Core tests, two Go/C regressions, the real loopback SSH regression and cross-build are not substitutes.
 
 ## Liquid Glass — required native inspection
 

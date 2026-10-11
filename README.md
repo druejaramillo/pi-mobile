@@ -2,7 +2,7 @@
 
 A native iPhone companion to **existing Herdr and Pi sessions**, reached directly over SSH/Tailscale. Local Parakeet v3 dictation. Actual Plannotator reviews inside the app. **No notifications or push service.**
 
-This repository contains an integrated source checkpoint, **not a device-verified release**. The Mac lane uses **Xcode 26+ / Swift 6.2+**. The parallel **Linux/xtool** lane now compiles and links the real arm64 iPhone app with an Apple-supplied SDK. The signed app has been installed successfully over USB on an iPhone. The user now reports a working connection after correcting the host bridge path, but offline/cached directory status. The foreground-status fix is built and tested, not yet installed. A project-local Pi extension opt-in has been added; manual `/reload` in the chosen Pi process activates it. End-to-end device behavior remains unverified. See [PRODUCT.md](PRODUCT.md) for the approved behavior and [bridge protocol](docs/BRIDGE_PROTOCOL.md) for the shared interface.
+This repository contains an integrated source checkpoint, **not a device-verified release**. The Mac lane uses **Xcode 26+ / Swift 6.2+**. The parallel **Linux/xtool** lane now compiles and links the real arm64 iPhone app with an Apple-supplied SDK. The signed app has been installed successfully over USB on an iPhone. The user now reports a working connection after correcting the host bridge path, but offline/cached directory status. The tested foreground-status fix is now installed in place. The host runtime and user-wide Pi loader are installed at their standard locations; manual `/reload` in each chosen existing Pi process activates native controls. End-to-end device behavior remains unverified. See [PRODUCT.md](PRODUCT.md) for the approved behavior and [bridge protocol](docs/BRIDGE_PROTOCOL.md) for the shared interface.
 
 ## Start on your Mac
 
@@ -24,7 +24,7 @@ The launch **Agents** tab indexes existing agents across your machines, with sta
 ./tools/build-ios-linux.sh
 ```
 
-Follow [Linux setup](docs/LINUX_SETUP.md) for the Apple-provided SDK, private toolchain, signing and explicit USB deployment. Thirty-eight Core XCTest methods pass on this Linux machine, and full/repeated unsigned app builds succeed. An earlier signed build is **installed on an iPhone**; the user reports a working connection. The new foreground-status fix still requires an authorized update and native verification. The Mac build remains available.
+Follow [Linux setup](docs/LINUX_SETUP.md) for the Apple-provided SDK, private toolchain, signing and explicit USB deployment. Thirty-eight Core XCTest methods pass on this Linux machine, and full/repeated unsigned app builds succeed. An earlier signed build is **installed on an iPhone**; the user reports a working connection. The foreground-status fix has also been installed after authorization and still requires native verification. The Mac build remains available.
 
 ## Layout
 
@@ -32,6 +32,14 @@ Follow [Linux setup](docs/LINUX_SETUP.md) for the Apple-provided SDK, private to
 - `host/`: SSH stdio adapter and a Pi extension for attaching to the same live process.
 - `tools/`: development and safe VoxType profile import utilities.
 - `docs/`: setup, compatibility and verification notes.
+
+## Install on each host account
+
+```sh
+./tools/install-host.sh
+```
+
+Run as the SSH account that owns Herdr, not with sudo. This installs the complete bridge at `~/.local/share/pi-mobile/host/` and its user-wide loader at `~/.pi/agent/extensions/pi-mobile.ts`, independent of this checkout and available across projects. It never reloads agents, starts sessions or changes Tailscale policy. In each existing Pi terminal you choose, run `/reload` after its turn/dialog finishes. On the phone, use `.local/share/pi-mobile/host/bridge-cli.mjs` as **Bridge path relative to home**. See [host setup](docs/HOST_SETUP.md).
 
 ## Keyless Tailscale SSH
 
