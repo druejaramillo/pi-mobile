@@ -8,7 +8,7 @@ ios
 
 ## Stack
 
-Native SwiftUI app, SwiftTerm terminal rendering, Citadel SSH over the user's always-available Tailscale network, FluidAudio/Core ML Parakeet TDT v3. Node.js host bridge and TypeScript Pi extension. XcodeGen produces the Xcode project on a Mac. These are implementation choices within the approved native build, not existing infrastructure.
+Native SwiftUI app, SwiftTerm terminal rendering, Citadel SSH over the user's always-available Tailscale network, FluidAudio/Core ML Parakeet TDT v3. Node.js host bridge and TypeScript Pi extension. XcodeGen produces the Xcode project on a Mac; a parallel SwiftPM/xtool build lane targets physical iPhones from Linux. These are implementation choices within the approved native build, not existing infrastructure.
 
 ## Users
 
@@ -38,7 +38,7 @@ Herdr owns terminal processes and topology. Pi owns each conversation, commands,
 
 ## Evidence on Hand
 
-Inspected local Herdr 0.9.1 terminal stream/API schema, Pi 1.1.0 extension API, pi-permission-system 40.1.3 dialog implementation and local Plannotator metadata publisher. VoxType configuration was inspected read-only. No Mac/device builds have been run in this Linux environment.
+Inspected local Herdr 0.9.1 terminal stream/API schema, Pi 1.1.0 extension API, pi-permission-system 40.1.3 dialog implementation and local Plannotator metadata publisher. VoxType configuration was inspected read-only. The platform-neutral Core package compiles and passes seven XCTest methods on Linux with Swift 6.4. No iOS app/device build has completed: the xtool lane currently lacks Apple's SDK and signing/device setup.
 
 ## Product Principles
 

@@ -26,14 +26,14 @@ git pull --ff-only
 
 ## Run the approved tests
 
-Host protocol tests run with `npm --prefix host test`. Native XCTest targets require the Mac:
+Host protocol tests run with `npm --prefix host test`. The app-hosted XCTest target requires the Mac:
 
 ```sh
 xcrun simctl list devices available
 ./tools/test-ios.sh 'platform=iOS Simulator,id=<chosen-UDID>'
 ```
 
-Choose a fresh Simulator with no saved machines. The script runs Core package tests plus the app-hosted session/dictation suite and saves `.xcresult` evidence under `ios/TestResults/`. Native tests are authored but have not yet been compiled or run; successful SSH/audio/review paths still need the device checklist. See [TESTING.md](TESTING.md).
+Choose a fresh Simulator with no saved machines. The script runs Core package tests plus the app-hosted session/dictation suite and saves `.xcresult` evidence under `ios/TestResults/`. Seven Core XCTest methods have compiled/passed on Linux; the eighteen app-hosted tests remain uncompiled/unrun. Successful SSH/audio/review paths still need the device checklist. A parallel [Linux xtool lane](LINUX_SETUP.md) is available for device builds after supplying Apple's SDK. See [TESTING.md](TESTING.md).
 
 ## Add machines
 

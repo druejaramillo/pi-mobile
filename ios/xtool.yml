@@ -1,0 +1,8 @@
+version: 1
+bundleID: com.druejaramillo.pi-mobile
+product: PiMobile
+infoPath: .xtool-support/Info.plist
+iconPath: PiMobile/Assets.xcassets/AppIcon.appiconset/AppIcon.png
+resources:
+  - PiMobile/Resources/voxtype-profile.json
+skipLSP: true

@@ -1,0 +1,15 @@
+diff --git a/Package.swift b/Package.swift
+index 373d872..a17898c 100644
+--- a/Package.swift
++++ b/Package.swift
+@@ -17,7 +17,9 @@ let documentationBuild = environment["SWIFTTERM_DOCC"] == "1"
+ let excludeAppleSources =
+     environment["SWIFTTERM_EXCLUDE_APPLE"] == "1"
+ #if os(Linux) || os(Windows)
+-let platformExcludes = ["Apple", "Mac", "iOS"]
++// Pi Mobile's xtool build targets iOS even though the manifest runs on Linux.
++// Keep ordinary host builds unchanged unless the Apple target is explicit.
++let platformExcludes: [String] = environment["SWIFTTERM_TARGET_APPLE"] == "1" ? [] : ["Apple", "Mac", "iOS"]
+ #else
+ let platformExcludes: [String] = excludeAppleSources ? ["Apple", "Mac", "iOS"] : []
+ #endif

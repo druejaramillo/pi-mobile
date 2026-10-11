@@ -26,13 +26,17 @@ Fixtures create their own child processes, Herdr socket and temporary directorie
 
 These peers are not the installed Herdr/TUI implementation. In particular, **native permission-component parsing, double confirmation, scope/audit behavior and desktop races still need verification against the actual package**. A synthetic permission component is intentionally not used to manufacture that proof.
 
-## Native models — Mac Swift package
+## Native models — Swift package on Linux or Mac
 
 ```sh
+# Linux, using the prepared private compiler:
+source tools/xtool-environment.sh
+swift test --package-path ios/PiMobileCore --jobs 4
+# Mac alternative:
 xcrun swift test --package-path ios/PiMobileCore
 ```
 
-Seven XCTest methods cover public command identity/Unicode, UUID uniqueness, null JSON values, action text capabilities, cross-machine location identity, terminal bytes and safe integer conversion. **Authored, not compiled or run on this Linux machine.**
+Seven XCTest methods cover public command identity/Unicode, UUID uniqueness, null JSON values, action text capabilities, cross-machine location identity, terminal bytes and safe integer conversion. **Compiled and passed on Linux with Swift 6.4.** Evidence: `ios/TestResults/core-linux-runpath.log`. This proves the platform-neutral Core package, not UIKit/SSH/audio or iOS execution. See [LINUX_SETUP.md](LINUX_SETUP.md) for setup.
 
 ## Native session and dictation — Xcode Simulator
 
@@ -47,7 +51,7 @@ The script checks prerequisites, builds the app, runs the Core package tests, th
 
 Eighteen XCTest methods cover the public SSH facade's disconnected/invalid-pin/unadvertised-review guards, dictation's unprepared/cancelled/invalid-profile paths, and literal offline-cleanup/draft-joining vectors. Tests use invalid or unprepared model profiles; successful microphone capture/inference and model downloads are not required. They import public modules without `@testable` access to internals.
 
-**These tests have only had source grammar/project-YAML checks here.** XCTest, package compilation and Xcode project generation/execution remain unrun; do not call the native tests green yet.
+**The eighteen app-hosted tests have only had source grammar/project-YAML checks here.** Their compilation/execution and Xcode project generation remain unrun; do not treat the passing Core package as an app-test pass. xtool's Linux lane does not run the iOS Simulator.
 
 ## Still outside automated proof
 
@@ -57,4 +61,4 @@ Eighteen XCTest methods cover the public SSH facade's disconnected/invalid-pin/u
 - Successful Parakeet model preparation/cache, microphone routes, five-minute cap, repeated completion delivery, cancellation timing, offline inference and memory/thermal/privacy measurements.
 - Native visual/accessibility inspection and actual permission-system compatibility.
 
-Follow the real-device checklist in [MAC_SETUP.md](MAC_SETUP.md). Approval to add these tests did not authorize automatic deployment, live-agent mutation or a claim of device readiness.
+Follow the real-device checklist in [MAC_SETUP.md](MAC_SETUP.md). The later xtool build/deploy request authorizes deliberate device installation, not automatic live-agent mutation or a claim of device readiness.

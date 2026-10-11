@@ -5,7 +5,10 @@
 *.pem
 *.key
 *.p12
+*.p8
 *.mobileprovision
+*.ipa
+*.xip
 .credentials*
 .DS_Store
 
@@ -18,6 +21,11 @@ TestResults/
 *.xcuserstate
 xcuserdata/
 ios/PiMobile.xcodeproj/
+ios/.xtool-dependencies/
+ios/.xtool-support/
+ios/xtool/
+ios/.swiftpm/
+ios/.sourcekit-lsp/
 
 # Developer-only evidence/runtime
 .impeccable/mocks/
