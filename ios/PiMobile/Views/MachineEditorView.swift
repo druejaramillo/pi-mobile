@@ -17,6 +17,7 @@ struct MachineEditorView: View {
     @State private var hostPublicKey = ""
     @State private var authentication = "key"
     @State private var secret = ""
+    @State private var keyPassphrase = ""
     @State private var error: String?
     @State private var importingKey = false
     @State private var confirmRemove = false
@@ -56,7 +57,11 @@ struct MachineEditorView: View {
                     }
                     if authentication == "key" {
                         Button("Import OpenSSH private key", systemImage: "square.and.arrow.down") { importingKey = true }
-                        if !secret.isEmpty { Label("Key ready to save", systemImage: "key.fill") }
+                        if !secret.isEmpty {
+                            Label("Key ready to save", systemImage: "key.fill")
+                            SecureField("Key passphrase (if encrypted)", text: $keyPassphrase)
+                                .textContentType(.password)
+                        }
                     } else {
                         SecureField(profile == nil ? "SSH password" : "New password (optional)", text: $secret)
                             .textContentType(.password)
@@ -85,6 +90,7 @@ struct MachineEditorView: View {
                 port = String(profile.port); username = profile.username; herdrSession = profile.herdrSession
                 bridgePath = profile.bridgePath; hostPublicKey = profile.hostPublicKey; authentication = profile.authentication
             }
+            .onChange(of: authentication) { _, _ in secret = ""; keyPassphrase = "" }
             .fileImporter(isPresented: $importingKey, allowedContentTypes: [.plainText, .data]) { result in
                 do {
                     let url = try result.get()
@@ -129,13 +135,20 @@ struct MachineEditorView: View {
             if profile == nil || profile?.authentication != authentication {
                 guard !secret.isEmpty else { throw MachineFormError.invalid("Add an SSH credential for this authentication type.") }
             }
-            if !secret.isEmpty { try MachineSecretStore.saveSecret(secret, machineId: machineId) }
+            if !secret.isEmpty {
+                let credential: String
+                if authentication == "key", !keyPassphrase.isEmpty {
+                    let bundle = BridgeJSON.object(["privateKey": .string(secret), "passphrase": .string(keyPassphrase)])
+                    credential = String(decoding: try JSONEncoder().encode(bundle), as: UTF8.self)
+                } else { credential = secret }
+                try MachineSecretStore.saveSecret(credential, machineId: machineId)
+            }
             let updated = MachineProfile(id: machineId, name: displayName, hostname: address, port: sshPort,
                 username: username, herdrSession: herdrSession, bridgePath: bridgePath,
                 hostPublicKey: pin, authentication: authentication)
             try machines.saveMachine(updated)
             sessions.forgetMachine(machineId)
-            secret = ""
+            secret = ""; keyPassphrase = ""
             dismiss()
             Task { await sessions.refreshMachine(updated) }
         } catch { self.error = error.localizedDescription }

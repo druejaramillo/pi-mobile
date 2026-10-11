@@ -61,7 +61,10 @@ struct MachineBrowserView: View {
                     Button("Edit connection") { editing = true }
                 }
             }
-            if let topology = connection.topology {
+            if let topology = sessions.cachedTopology(for: profile.id) {
+                if connection.state != "connected" {
+                    Text("Cached workspaces · reconnect to check current state").font(.footnote).foregroundStyle(.secondary)
+                }
                 ForEach(topology.workspaces) { workspace in
                     Section(workspace.name) {
                         ForEach(topology.tabs.filter { $0.workspaceId == workspace.id }) { tab in
@@ -90,10 +93,14 @@ struct TabPanesView: View {
     let profile: MachineProfile
     let tab: HerdrTab
     @ObservedObject var connection: SSHBridgeConnection
+    @EnvironmentObject private var sessions: MobileSessionHub
 
     var body: some View {
         List {
-            ForEach(connection.topology?.panes.filter { $0.tabId == tab.id } ?? []) { pane in
+            if connection.state != "connected" {
+                Text("Cached panes · reconnect to check current state").font(.footnote).foregroundStyle(.secondary)
+            }
+            ForEach(sessions.cachedTopology(for: profile.id)?.panes.filter { $0.tabId == tab.id } ?? []) { pane in
                 NavigationLink {
                     PaneDetailView(profile: profile, pane: pane, connection: connection)
                 } label: {
@@ -101,7 +108,9 @@ struct TabPanesView: View {
                         HStack {
                             Text(pane.title.isEmpty ? "Terminal" : pane.title).font(.headline)
                             Spacer()
-                            if pane.agent != nil { AgentStatusLabel(state: pane.state) }
+                            if pane.agent != nil {
+                                AgentStatusLabel(state: connection.state == "connected" ? pane.state : "offline")
+                            }
                         }
                         Text(pane.cwd).font(.subheadline).foregroundStyle(.secondary).lineLimit(2)
                     }.padding(.vertical, 4)

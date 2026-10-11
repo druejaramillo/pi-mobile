@@ -1,0 +1,789 @@
+{
+  "schemaVersion": 1,
+  "engine": "parakeet",
+  "model": "parakeet-tdt-0.6b-v3",
+  "sampleRate": 16000,
+  "maxDurationSeconds": 300,
+  "feedbackEnabled": true,
+  "spokenPunctuation": true,
+  "filterFillerWords": true,
+  "appendSpace": true,
+  "replacements": [
+    {
+      "spoken": "skill maintain verification skill",
+      "command": "/skill:maintain-verification-skill"
+    },
+    {
+      "spoken": "skill create verification skill",
+      "command": "/skill:create-verification-skill"
+    },
+    {
+      "spoken": "skill product marketing context",
+      "command": "/skill:product-marketing-context"
+    },
+    {
+      "spoken": "skill write discoverable code",
+      "command": "/skill:write-discoverable-code"
+    },
+    {
+      "spoken": "maintain verification skill",
+      "command": "/skill:maintain-verification-skill"
+    },
+    {
+      "spoken": "skill marketing psychology",
+      "command": "/skill:marketing-psychology"
+    },
+    {
+      "spoken": "create verification skill",
+      "command": "/skill:create-verification-skill"
+    },
+    {
+      "spoken": "pi design family variants",
+      "command": "/design-family-variants"
+    },
+    {
+      "spoken": "product marketing context",
+      "command": "/skill:product-marketing-context"
+    },
+    {
+      "spoken": "skill m l training recipe",
+      "command": "/skill:ml-training-recipe"
+    },
+    {
+      "spoken": "pi plannotator plan mode",
+      "command": "/plannotator-plan-mode"
+    },
+    {
+      "spoken": "skill ml training recipe",
+      "command": "/skill:ml-training-recipe"
+    },
+    {
+      "spoken": "skill writing for agents",
+      "command": "/skill:writing-for-agents"
+    },
+    {
+      "spoken": "pi plannotator annotate",
+      "command": "/plannotator-annotate"
+    },
+    {
+      "spoken": "skill literature review",
+      "command": "/skill:literature-review"
+    },
+    {
+      "spoken": "skill site architecture",
+      "command": "/skill:site-architecture"
+    },
+    {
+      "spoken": "skill source comparison",
+      "command": "/skill:source-comparison"
+    },
+    {
+      "spoken": "skill writing fragments",
+      "command": "/skill:writing-fragments"
+    },
+    {
+      "spoken": "write discoverable code",
+      "command": "/skill:write-discoverable-code"
+    },
+    {
+      "spoken": "design family variants",
+      "command": "/design-family-variants"
+    },
+    {
+      "spoken": "pi design promote hero",
+      "command": "/design-promote-hero"
+    },
+    {
+      "spoken": "pi design study matrix",
+      "command": "/design-study-matrix"
+    },
+    {
+      "spoken": "skill go spec reviewer",
+      "command": "/skill:go-spec-reviewer"
+    },
+    {
+      "spoken": "skill obsidian cleanup",
+      "command": "/skill:obsidian-cleanup"
+    },
+    {
+      "spoken": "skill paper code audit",
+      "command": "/skill:paper-code-audit"
+    },
+    {
+      "spoken": "skill terminal browser",
+      "command": "/skill:terminal-browser"
+    },
+    {
+      "spoken": "pi plannotator review",
+      "command": "/plannotator-review"
+    },
+    {
+      "spoken": "plannotator plan mode",
+      "command": "/plannotator-plan-mode"
+    },
+    {
+      "spoken": "skill diagnosing bugs",
+      "command": "/skill:diagnosing-bugs"
+    },
+    {
+      "spoken": "skill domain modeling",
+      "command": "/skill:domain-modeling"
+    },
+    {
+      "spoken": "skill feature framing",
+      "command": "/skill:feature-framing"
+    },
+    {
+      "spoken": "skill feature shaping",
+      "command": "/skill:feature-shaping"
+    },
+    {
+      "spoken": "skill grill with docs",
+      "command": "/skill:grill-with-docs"
+    },
+    {
+      "spoken": "skill research review",
+      "command": "/skill:research-review"
+    },
+    {
+      "spoken": "marketing psychology",
+      "command": "/skill:marketing-psychology"
+    },
+    {
+      "spoken": "pi design build home",
+      "command": "/design-build-home"
+    },
+    {
+      "spoken": "pi permission system",
+      "command": "/permission-system"
+    },
+    {
+      "spoken": "plannotator annotate",
+      "command": "/plannotator-annotate"
+    },
+    {
+      "spoken": "skill alpha research",
+      "command": "/skill:alpha-research"
+    },
+    {
+      "spoken": "skill concept design",
+      "command": "/skill:concept-design"
+    },
+    {
+      "spoken": "skill diagnose crash",
+      "command": "/skill:diagnose-crash"
+    },
+    {
+      "spoken": "skill session search",
+      "command": "/skill:session-search"
+    },
+    {
+      "spoken": "design promote hero",
+      "command": "/design-promote-hero"
+    },
+    {
+      "spoken": "design study matrix",
+      "command": "/design-study-matrix"
+    },
+    {
+      "spoken": "pi plannotator last",
+      "command": "/plannotator-last"
+    },
+    {
+      "spoken": "skill auto research",
+      "command": "/skill:autoresearch"
+    },
+    {
+      "spoken": "skill concept audit",
+      "command": "/skill:concept-audit"
+    },
+    {
+      "spoken": "skill deep research",
+      "command": "/skill:deep-research"
+    },
+    {
+      "spoken": "skill p d f explore",
+      "command": "/skill:pdf-explore"
+    },
+    {
+      "spoken": "skill paper writing",
+      "command": "/skill:paper-writing"
+    },
+    {
+      "spoken": "skill skill creator",
+      "command": "/skill:skill-creator"
+    },
+    {
+      "spoken": "skill writing beats",
+      "command": "/skill:writing-beats"
+    },
+    {
+      "spoken": "skill writing shape",
+      "command": "/skill:writing-shape"
+    },
+    {
+      "spoken": "ml training recipe",
+      "command": "/skill:ml-training-recipe"
+    },
+    {
+      "spoken": "pi design hero lab",
+      "command": "/design-hero-lab"
+    },
+    {
+      "spoken": "plannotator review",
+      "command": "/plannotator-review"
+    },
+    {
+      "spoken": "skill autoresearch",
+      "command": "/skill:autoresearch"
+    },
+    {
+      "spoken": "skill b d f l mode",
+      "command": "/skill:bdfl-mode"
+    },
+    {
+      "spoken": "skill design inspo",
+      "command": "/skill:design-inspo"
+    },
+    {
+      "spoken": "skill pull request",
+      "command": "/skill:pr"
+    },
+    {
+      "spoken": "skill sentry c l i",
+      "command": "/skill:sentry-cli"
+    },
+    {
+      "spoken": "writing for agents",
+      "command": "/skill:writing-for-agents"
+    },
+    {
+      "spoken": "design build home",
+      "command": "/design-build-home"
+    },
+    {
+      "spoken": "literature review",
+      "command": "/skill:literature-review"
+    },
+    {
+      "spoken": "permission system",
+      "command": "/permission-system"
+    },
+    {
+      "spoken": "pi design catalog",
+      "command": "/design-catalog"
+    },
+    {
+      "spoken": "pi google account",
+      "command": "/google-account"
+    },
+    {
+      "spoken": "site architecture",
+      "command": "/skill:site-architecture"
+    },
+    {
+      "spoken": "skill code review",
+      "command": "/skill:code-review"
+    },
+    {
+      "spoken": "skill copywriting",
+      "command": "/skill:copywriting"
+    },
+    {
+      "spoken": "skill pdf explore",
+      "command": "/skill:pdf-explore"
+    },
+    {
+      "spoken": "skill plannotator",
+      "command": "/skill:plannotator"
+    },
+    {
+      "spoken": "skill replication",
+      "command": "/skill:replication"
+    },
+    {
+      "spoken": "source comparison",
+      "command": "/skill:source-comparison"
+    },
+    {
+      "spoken": "writing fragments",
+      "command": "/skill:writing-fragments"
+    },
+    {
+      "spoken": "go spec reviewer",
+      "command": "/skill:go-spec-reviewer"
+    },
+    {
+      "spoken": "obsidian cleanup",
+      "command": "/skill:obsidian-cleanup"
+    },
+    {
+      "spoken": "paper code audit",
+      "command": "/skill:paper-code-audit"
+    },
+    {
+      "spoken": "pi auto research",
+      "command": "/autoresearch"
+    },
+    {
+      "spoken": "pi deep research",
+      "command": "/deepresearch"
+    },
+    {
+      "spoken": "pi toggle skills",
+      "command": "/toggle-skills"
+    },
+    {
+      "spoken": "plannotator last",
+      "command": "/plannotator-last"
+    },
+    {
+      "spoken": "skill design lab",
+      "command": "/skill:design-lab"
+    },
+    {
+      "spoken": "skill e l i five",
+      "command": "/skill:eli5"
+    },
+    {
+      "spoken": "skill impeccable",
+      "command": "/skill:impeccable"
+    },
+    {
+      "spoken": "skill powerpoint",
+      "command": "/skill:pptx"
+    },
+    {
+      "spoken": "skill reveal j s",
+      "command": "/skill:revealjs"
+    },
+    {
+      "spoken": "skill sentry cli",
+      "command": "/skill:sentry-cli"
+    },
+    {
+      "spoken": "skill to tickets",
+      "command": "/skill:to-tickets"
+    },
+    {
+      "spoken": "skill way finder",
+      "command": "/skill:wayfinder"
+    },
+    {
+      "spoken": "skill work trees",
+      "command": "/skill:worktrees"
+    },
+    {
+      "spoken": "terminal browser",
+      "command": "/skill:terminal-browser"
+    },
+    {
+      "spoken": "design hero lab",
+      "command": "/design-hero-lab"
+    },
+    {
+      "spoken": "diagnosing bugs",
+      "command": "/skill:diagnosing-bugs"
+    },
+    {
+      "spoken": "domain modeling",
+      "command": "/skill:domain-modeling"
+    },
+    {
+      "spoken": "feature framing",
+      "command": "/skill:feature-framing"
+    },
+    {
+      "spoken": "feature shaping",
+      "command": "/skill:feature-shaping"
+    },
+    {
+      "spoken": "pi autoresearch",
+      "command": "/autoresearch"
+    },
+    {
+      "spoken": "pi b d f l mode",
+      "command": "/bdfl-mode"
+    },
+    {
+      "spoken": "pi cloak status",
+      "command": "/cloak-status"
+    },
+    {
+      "spoken": "pi deepresearch",
+      "command": "/deepresearch"
+    },
+    {
+      "spoken": "research review",
+      "command": "/skill:research-review"
+    },
+    {
+      "spoken": "skill base camp",
+      "command": "/skill:basecamp"
+    },
+    {
+      "spoken": "skill bdfl mode",
+      "command": "/skill:bdfl-mode"
+    },
+    {
+      "spoken": "skill humanizer",
+      "command": "/skill:humanizer"
+    },
+    {
+      "spoken": "skill prototype",
+      "command": "/skill:prototype"
+    },
+    {
+      "spoken": "skill reveal js",
+      "command": "/skill:revealjs"
+    },
+    {
+      "spoken": "skill sentry go",
+      "command": "/skill:sentry-go"
+    },
+    {
+      "spoken": "skill wayfinder",
+      "command": "/skill:wayfinder"
+    },
+    {
+      "spoken": "skill worktrees",
+      "command": "/skill:worktrees"
+    },
+    {
+      "spoken": "alpha research",
+      "command": "/skill:alpha-research"
+    },
+    {
+      "spoken": "concept design",
+      "command": "/skill:concept-design"
+    },
+    {
+      "spoken": "design catalog",
+      "command": "/design-catalog"
+    },
+    {
+      "spoken": "diagnose crash",
+      "command": "/skill:diagnose-crash"
+    },
+    {
+      "spoken": "google account",
+      "command": "/google-account"
+    },
+    {
+      "spoken": "session search",
+      "command": "/skill:session-search"
+    },
+    {
+      "spoken": "skill basecamp",
+      "command": "/skill:basecamp"
+    },
+    {
+      "spoken": "skill eli five",
+      "command": "/skill:eli5"
+    },
+    {
+      "spoken": "skill grill me",
+      "command": "/skill:grill-me"
+    },
+    {
+      "spoken": "skill grilling",
+      "command": "/skill:grilling"
+    },
+    {
+      "spoken": "skill jev lint",
+      "command": "/skill:jevlint"
+    },
+    {
+      "spoken": "skill revealjs",
+      "command": "/skill:revealjs"
+    },
+    {
+      "spoken": "skill tailwind",
+      "command": "/skill:tailwind"
+    },
+    {
+      "spoken": "concept audit",
+      "command": "/skill:concept-audit"
+    },
+    {
+      "spoken": "deep research",
+      "command": "/skill:deep-research"
+    },
+    {
+      "spoken": "paper writing",
+      "command": "/skill:paper-writing"
+    },
+    {
+      "spoken": "pi web search",
+      "command": "/websearch"
+    },
+    {
+      "spoken": "skill cal dir",
+      "command": "/skill:caldir"
+    },
+    {
+      "spoken": "skill creator",
+      "command": "/skill:skill-creator"
+    },
+    {
+      "spoken": "skill h t m x",
+      "command": "/skill:htmx"
+    },
+    {
+      "spoken": "skill handoff",
+      "command": "/skill:handoff"
+    },
+    {
+      "spoken": "skill jevlint",
+      "command": "/skill:jevlint"
+    },
+    {
+      "spoken": "skill omarchy",
+      "command": "/skill:omarchy"
+    },
+    {
+      "spoken": "skill p p t x",
+      "command": "/skill:pptx"
+    },
+    {
+      "spoken": "skill preview",
+      "command": "/skill:preview"
+    },
+    {
+      "spoken": "skill show me",
+      "command": "/skill:show-me"
+    },
+    {
+      "spoken": "skill slop go",
+      "command": "/skill:slop-go"
+    },
+    {
+      "spoken": "toggle skills",
+      "command": "/toggle-skills"
+    },
+    {
+      "spoken": "writing beats",
+      "command": "/skill:writing-beats"
+    },
+    {
+      "spoken": "writing shape",
+      "command": "/skill:writing-shape"
+    },
+    {
+      "spoken": "b d f l mode",
+      "command": "/bdfl-mode"
+    },
+    {
+      "spoken": "cloak status",
+      "command": "/cloak-status"
+    },
+    {
+      "spoken": "design inspo",
+      "command": "/skill:design-inspo"
+    },
+    {
+      "spoken": "pi bdfl mode",
+      "command": "/bdfl-mode"
+    },
+    {
+      "spoken": "pi image gen",
+      "command": "/image-gen"
+    },
+    {
+      "spoken": "pi replicate",
+      "command": "/replicate"
+    },
+    {
+      "spoken": "pi summarize",
+      "command": "/summarize"
+    },
+    {
+      "spoken": "pi video gen",
+      "command": "/video-gen"
+    },
+    {
+      "spoken": "pi websearch",
+      "command": "/websearch"
+    },
+    {
+      "spoken": "skill caldir",
+      "command": "/skill:caldir"
+    },
+    {
+      "spoken": "skill docker",
+      "command": "/skill:docker"
+    },
+    {
+      "spoken": "skill herder",
+      "command": "/skill:herdr"
+    },
+    {
+      "spoken": "skill triage",
+      "command": "/skill:triage"
+    },
+    {
+      "spoken": "pdf explore",
+      "command": "/skill:pdf-explore"
+    },
+    {
+      "spoken": "skill c r o",
+      "command": "/skill:cro"
+    },
+    {
+      "spoken": "skill herdr",
+      "command": "/skill:herdr"
+    },
+    {
+      "spoken": "skill retro",
+      "command": "/skill:retro"
+    },
+    {
+      "spoken": "skill s e o",
+      "command": "/skill:seo"
+    },
+    {
+      "spoken": "skill t d d",
+      "command": "/skill:tdd"
+    },
+    {
+      "spoken": "skill teach",
+      "command": "/skill:teach"
+    },
+    {
+      "spoken": "skill templ",
+      "command": "/skill:templ"
+    },
+    {
+      "spoken": "design lab",
+      "command": "/skill:design-lab"
+    },
+    {
+      "spoken": "pi compare",
+      "command": "/compare"
+    },
+    {
+      "spoken": "pi curator",
+      "command": "/curator"
+    },
+    {
+      "spoken": "pi kickoff",
+      "command": "/kickoff"
+    },
+    {
+      "spoken": "pi slop go",
+      "command": "/slop-go"
+    },
+    {
+      "spoken": "sentry cli",
+      "command": "/skill:sentry-cli"
+    },
+    {
+      "spoken": "skill eli5",
+      "command": "/skill:eli5"
+    },
+    {
+      "spoken": "skill htmx",
+      "command": "/skill:htmx"
+    },
+    {
+      "spoken": "skill pptx",
+      "command": "/skill:pptx"
+    },
+    {
+      "spoken": "web search",
+      "command": "/websearch"
+    },
+    {
+      "spoken": "bdfl mode",
+      "command": "/bdfl-mode"
+    },
+    {
+      "spoken": "image gen",
+      "command": "/image-gen"
+    },
+    {
+      "spoken": "pi recipe",
+      "command": "/recipe"
+    },
+    {
+      "spoken": "pi review",
+      "command": "/review"
+    },
+    {
+      "spoken": "pi search",
+      "command": "/search"
+    },
+    {
+      "spoken": "sentry go",
+      "command": "/skill:sentry-go"
+    },
+    {
+      "spoken": "skill bro",
+      "command": "/skill:bro"
+    },
+    {
+      "spoken": "skill cro",
+      "command": "/skill:cro"
+    },
+    {
+      "spoken": "skill p r",
+      "command": "/skill:pr"
+    },
+    {
+      "spoken": "skill seo",
+      "command": "/skill:seo"
+    },
+    {
+      "spoken": "skill tdd",
+      "command": "/skill:tdd"
+    },
+    {
+      "spoken": "video gen",
+      "command": "/video-gen"
+    },
+    {
+      "spoken": "pi audit",
+      "command": "/audit"
+    },
+    {
+      "spoken": "pi draft",
+      "command": "/draft"
+    },
+    {
+      "spoken": "pi frame",
+      "command": "/frame"
+    },
+    {
+      "spoken": "pi llama",
+      "command": "/llama"
+    },
+    {
+      "spoken": "pi m c p",
+      "command": "/mcp"
+    },
+    {
+      "spoken": "pi shape",
+      "command": "/shape"
+    },
+    {
+      "spoken": "skill go",
+      "command": "/skill:go"
+    },
+    {
+      "spoken": "skill pr",
+      "command": "/skill:pr"
+    },
+    {
+      "spoken": "slop go",
+      "command": "/slop-go"
+    },
+    {
+      "spoken": "pi lit",
+      "command": "/lit"
+    },
+    {
+      "spoken": "pi mcp",
+      "command": "/mcp"
+    }
+  ]
+}

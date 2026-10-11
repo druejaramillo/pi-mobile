@@ -12,11 +12,13 @@ struct PaneDetailView: View {
     @State private var attaching = false
     @State private var terminalWritable = false
     @State private var attachedTerminal = false
+    @State private var controlAttemptFailed = false
     @State private var errorMessage: String?
     @State private var confirmTakeover = false
     @State private var confirmAbort = false
     @State private var reviewPresentation: ReviewPresentation?
     @State private var openingReview = false
+    @State private var paneVisible = false
 
     private var location: PaneLocation { PaneLocation(machineId: profile.id, terminalId: pane.terminalId) }
     private var currentPane: HerdrPane { connection.topology?.panes.first { $0.terminalId == pane.terminalId } ?? pane }
@@ -87,6 +89,7 @@ struct PaneDetailView: View {
             }
         }
         .task {
+            paneVisible = true
             if pane.agent != "pi" { surface = "Terminal" }
             await reconnectPane()
         }
@@ -100,10 +103,17 @@ struct PaneDetailView: View {
             }
         }
         .onChange(of: connection.state) { _, state in
-            if state != "connected" { terminalWritable = false; attachedTerminal = false }
-            else if !attaching { Task { await attachPane() } }
+            if state != "connected" { terminalWritable = false; attachedTerminal = false; controlAttemptFailed = false }
+            else if paneVisible && !attaching { Task { await attachPane() } }
+        }
+        .onChange(of: connection.terminalFrame?.terminalId) { _, terminalId in
+            if terminalId == nil && !attaching {
+                terminalWritable = false
+                attachedTerminal = false
+            }
         }
         .onDisappear {
+            paneVisible = false
             dictation.cancelRecording()
             reviewPresentation?.tunnel.close()
             // Closing this phone's connection releases control, never host agents or shells.
@@ -145,8 +155,17 @@ struct PaneDetailView: View {
                         }
                     }
                 } else {
-                    Button("Take control") { Task { await attachTerminal(control: true, takeover: false) } }
-                        .disabled(connection.state != "connected" || attaching)
+                    if controlAttemptFailed {
+                        Button("Take over…") { confirmTakeover = true }
+                            .disabled(connection.state != "connected" || attaching)
+                    } else if attachedTerminal {
+                        Button("Take control") { Task { await attachTerminal(control: true, takeover: false) } }
+                            .disabled(connection.state != "connected" || attaching)
+                    }
+                    if !attachedTerminal {
+                        Button("Observe") { Task { await attachTerminal(control: false, takeover: false) } }
+                            .disabled(connection.state != "connected" || attaching)
+                    }
                 }
             }.padding(.horizontal).padding(.vertical, 8)
             MobileTerminalView(frame: connection.terminalFrame?.terminalId == pane.terminalId ? connection.terminalFrame : nil,
@@ -173,6 +192,7 @@ struct PaneDetailView: View {
     }
 
     private func attachPane() async {
+        guard paneVisible, !Task.isCancelled else { return }
         if surface == "Terminal" { await attachTerminal(control: false, takeover: false); return }
         guard !attaching else { return }
         attaching = true
@@ -184,7 +204,7 @@ struct PaneDetailView: View {
     }
 
     private func attachTerminal(control: Bool, takeover: Bool) async {
-        guard !attaching, connection.state == "connected" else { return }
+        guard paneVisible, !Task.isCancelled, !attaching, connection.state == "connected" else { return }
         attaching = true
         defer { attaching = false }
         do {
@@ -192,12 +212,14 @@ struct PaneDetailView: View {
                 "terminalId": .string(pane.terminalId), "control": .bool(control), "takeover": .bool(takeover),
                 "cols": .number(80), "rows": .number(24)]))
             terminalWritable = control; attachedTerminal = true; errorMessage = nil
-        } catch let failure as BridgeFailure {
-            errorMessage = failure.message
-            if control && !takeover && ["terminal_control_busy", "terminal_owned", "terminal_busy", "control_unavailable"].contains(failure.code) {
-                confirmTakeover = true
-            }
-        } catch { errorMessage = error.localizedDescription }
+            if control { controlAttemptFailed = false }
+        } catch {
+            terminalWritable = false; attachedTerminal = false
+            errorMessage = error.localizedDescription
+            // The real Herdr CLI reports a closed startup stream, not the guessed busy codes.
+            // A takeover stays a separate, explicitly confirmed action after a failed control attempt.
+            if control && !takeover { controlAttemptFailed = true }
+        }
     }
 
     private func sendTerminalBytes(_ bytes: Data) {
@@ -225,7 +247,7 @@ struct PaneDetailView: View {
         defer { openingReview = false }
         do {
             // Validate that the request is still advertised before opening its loopback forwarding.
-            await sessions.refreshMachine(profile)
+            _ = try await connection.request(method: "snapshot", params: .object([:]))
             guard connection.topology?.panes.first(where: { $0.terminalId == pane.terminalId })?
                 .reviews.contains(where: { $0.id == review.id && $0.url == review.url }) == true else {
                 errorMessage = "This review has ended. Refresh the agent to see its latest response."

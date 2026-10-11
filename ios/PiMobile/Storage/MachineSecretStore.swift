@@ -37,7 +37,7 @@ enum MachineSecretStore {
 
     private static func itemQuery(_ id: UUID) -> [String: Any] {
         [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service,
-         kSecAttrAccount as String: id.uuidString]
+         kSecAttrAccount as String: id.uuidString, kSecAttrSynchronizable as String: false]
     }
 }
 

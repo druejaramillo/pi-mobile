@@ -10,6 +10,7 @@ final class MobileSessionHub: ObservableObject {
     @Published private(set) var machineErrors: [UUID: String] = [:]
     private var connections: [UUID: SSHBridgeConnection] = [:]
     private var subscriptions: [UUID: AnyCancellable] = [:]
+    private var cachedTopologies: [UUID: HerdrTopology] = [:]
     private var refreshGeneration = UUID()
     let drafts = PaneDraftStore()
 
@@ -36,8 +37,9 @@ final class MobileSessionHub: ObservableObject {
                 try await client.connect(profile: profile, secret: secret)
             }
             let response = try await client.request(method: "snapshot", params: .object([:]))
-            _ = try response.decode(HerdrTopology.self)
+            let topology = try response.decode(HerdrTopology.self)
             guard generation == refreshGeneration else { return }
+            cachedTopologies[profile.id] = topology
             checkedAt[profile.id] = Date()
             machineErrors.removeValue(forKey: profile.id)
         } catch {
@@ -55,9 +57,13 @@ final class MobileSessionHub: ObservableObject {
         }
     }
 
+    func cachedTopology(for machineId: UUID) -> HerdrTopology? {
+        connections[machineId]?.topology ?? cachedTopologies[machineId]
+    }
+
     func agentEntries(_ profiles: [MachineProfile]) -> [GlobalAgentEntry] {
         profiles.flatMap { profile in
-            guard let topology = connections[profile.id]?.topology else { return [GlobalAgentEntry]() }
+            guard let topology = cachedTopology(for: profile.id) else { return [GlobalAgentEntry]() }
             return topology.panes.compactMap { pane in
                 guard let kind = pane.agent, !kind.isEmpty else { return nil }
                 let workspace = topology.workspaces.first { $0.id == pane.workspaceId }?.name ?? pane.workspaceId
@@ -79,6 +85,7 @@ final class MobileSessionHub: ObservableObject {
         subscriptions.removeValue(forKey: id)
         checkedAt.removeValue(forKey: id)
         machineErrors.removeValue(forKey: id)
+        cachedTopologies.removeValue(forKey: id)
     }
 
     func suspendConnections() {
@@ -97,5 +104,5 @@ struct GlobalAgentEntry: Identifiable {
     let stale: Bool
     var id: String { "\(profile.id.uuidString)/\(pane.terminalId)" }
     var title: String { pane.title.isEmpty ? (pane.agent ?? "Agent") : pane.title }
-    var context: String { "\(profile.name) · \(workspaceName) · \(tabName)" }
+    var context: String { "\(profile.name) · \(workspaceName) · \(tabName) · \(pane.id)" }
 }

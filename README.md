@@ -2,7 +2,19 @@
 
 A native iPhone companion to **existing Herdr and Pi sessions**, reached directly over SSH/Tailscale. Local Parakeet v3 dictation. Actual Plannotator reviews inside the app. **No notifications or push service.**
 
-This repository is under active construction. Native compilation and device validation require your Mac; this Linux checkout cannot provide those checks. See [PRODUCT.md](PRODUCT.md) for the approved behavior and [bridge protocol](docs/BRIDGE_PROTOCOL.md) for the shared interface.
+This repository contains an integrated source checkpoint, **not a device-verified release**. Native compilation and device validation require your Mac with **Xcode 26+ / Swift 6.2+**; this Linux checkout cannot provide those checks. See [PRODUCT.md](PRODUCT.md) for the approved behavior and [bridge protocol](docs/BRIDGE_PROTOCOL.md) for the shared interface.
+
+## Start on your Mac
+
+```sh
+gh repo clone druejaramillo/pi-mobile
+cd pi-mobile
+./tools/build-ios.sh
+```
+
+Follow [Mac setup](docs/MAC_SETUP.md) for signing/device verification and [host setup](docs/HOST_SETUP.md) for deliberate installation. Nothing is installed or restarted automatically.
+
+The launch **Agents** tab indexes existing agents across your machines, with status and machine/workspace/tab/pane context. Search and tap to open the exact running pane. Machines also provides ordinary workspace/tab/terminal browsing. Cached locations are marked stale; unavailable hosts are not treated as empty.
 
 ## Layout
 
@@ -17,4 +29,4 @@ SSH host keys are explicitly trusted; secrets belong in iOS Keychain, never Git.
 
 ## Current verification
 
-Host/static checks will be recorded in `docs/BUILD_STATUS.md`. An Xcode build and physical iPhone pass remain required before calling this usable on-device. Do not interpret source availability as a successful native build.
+Host TypeScript/JavaScript and importer lint/syntax checks passed. See [build status](docs/BUILD_STATUS.md) for exact checks, compatibility boundaries and unresolved gates. An Xcode build and physical iPhone pass remain required before calling this usable on-device. Do not interpret source availability as a successful native build.

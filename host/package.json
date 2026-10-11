@@ -1,0 +1,12 @@
+{
+  "name": "pi-mobile-host",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.19.0" },
+  "scripts": { "check": "node check-host.mjs" },
+  "pi": { "extensions": ["./pi-mobile-extension.ts"] },
+  "peerDependencies": { "@earendil-works/pi-coding-agent": "1.1.0" },
+  "peerDependenciesMeta": { "@earendil-works/pi-coding-agent": { "optional": true } },
+  "devDependencies": { "@types/node": "22.19.0", "typescript": "5.9.3" }
+}

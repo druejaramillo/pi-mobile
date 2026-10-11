@@ -8,6 +8,18 @@ if [[ $(uname -s) != Darwin ]]; then
 fi
 command -v xcodegen >/dev/null || { printf '%s\n' 'Pi Mobile: install XcodeGen on your Mac, then run this command again.' >&2; exit 2; }
 xcrun --find swift >/dev/null
+swift_version=$(xcrun swift -version)
+if [[ $swift_version =~ Swift\ version\ ([0-9]+)\.([0-9]+) ]]; then
+  major=${BASH_REMATCH[1]}
+  minor=${BASH_REMATCH[2]}
+  if (( major < 6 || (major == 6 && minor < 2) )); then
+    printf '%s\n' 'Pi Mobile: pinned SwiftTerm requires Swift 6.2 or newer (Xcode 26+).' >&2
+    exit 2
+  fi
+else
+  printf '%s\n' 'Pi Mobile: could not determine the selected Xcode Swift version.' >&2
+  exit 2
+fi
 cd "$root/ios"
 xcodegen generate --spec project.yml
 xcodebuild -project PiMobile.xcodeproj -scheme PiMobile \

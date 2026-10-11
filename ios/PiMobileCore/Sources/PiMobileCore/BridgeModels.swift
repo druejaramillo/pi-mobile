@@ -1,6 +1,6 @@
 import Foundation
 
-/// Lossless JSON at the SSH protocol boundary; never decode external payloads as Any.
+/// Typed JSON at the SSH protocol boundary; never decode external payloads as Any.
 public enum BridgeJSON: Codable, Sendable, Equatable {
     case object([String: BridgeJSON]), array([BridgeJSON]), string(String), number(Double), bool(Bool), null
 
@@ -104,7 +104,12 @@ public struct PiSlashCommand: Codable, Identifiable, Sendable {
     public let description: String
     public var id: String { name }
 }
-public struct PiDialogOption: Codable, Identifiable, Sendable { public let id: String; public let label: String }
+/// Only an advertised text-taking action may carry the native response field.
+public struct PiDialogOption: Codable, Identifiable, Sendable {
+    public let id: String
+    public let label: String
+    public let acceptsValue: Bool?
+}
 public struct PiDialogSnapshot: Codable, Identifiable, Sendable {
     public let dialogId: String
     public let revision: Int

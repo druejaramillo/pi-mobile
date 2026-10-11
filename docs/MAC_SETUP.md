@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Xcode 16 or newer (Swift 6 toolchain); app language mode is Swift 5.
+- **Xcode 26 or newer with Swift 6.2+** (required by pinned SwiftTerm); app language mode is Swift 5.
 - iPhone running iOS 17 or newer. Physical-device Parakeet inference is a required verification step, not proven by the platform minimum.
 - XcodeGen installed on the Mac (`brew install xcodegen` if you choose Homebrew).
 - Tailscale connected on the iPhone and each host.
@@ -26,9 +26,9 @@ git pull --ff-only
 
 ## Add machines
 
-Install the host bridge following [HOST_SETUP.md](HOST_SETUP.md). Add each machine using its Tailscale DNS name/IP, SSH username, Herdr session and a verified `ssh-ed25519` host public key. Obtain that public key directly on a trusted host from `/etc/ssh/ssh_host_ed25519_key.pub`; do not trust a network scan automatically. Import an OpenSSH Ed25519 private key or provide a password; credentials are stored in device-only Keychain. Encrypted key support is described in [IOS_TRANSPORT.md](IOS_TRANSPORT.md).
+Install the host bridge following [HOST_SETUP.md](HOST_SETUP.md). Add each machine using its Tailscale DNS name/IP, SSH username, Herdr session and a verified `ssh-ed25519` host public key. Obtain that public key directly on a trusted host from `/etc/ssh/ssh_host_ed25519_key.pub`; do not trust a network scan automatically. Import an OpenSSH Ed25519 private key (enter its passphrase if encrypted) or provide a password; credentials are stored in device-only Keychain. Encrypted key support is described in [IOS_TRANSPORT.md](IOS_TRANSPORT.md).
 
-The global Agents tab is the launch screen. Refresh checks every configured machine independently. An offline host retains explicitly stale cached locations. Tap any agent to open its pane directly. Machines remains available for workspaces/tabs and ordinary shell panes.
+The global Agents tab is the launch screen. Refresh checks every configured machine independently. An offline host retains explicitly stale locations cached during this app process; the directory never treats an unreachable host as verified empty. Tap any agent to open its pane directly. Machines remains available for workspaces/tabs and ordinary shell panes.
 
 ## Parakeet
 

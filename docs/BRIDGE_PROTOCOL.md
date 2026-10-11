@@ -19,7 +19,7 @@ Every mutation uses the command id for duplicate suppression. Reuse of an id wit
 - `agent.detach` `{}` → `{detached:true}`; disconnect only the mobile subscription.
 - `agent.prompt` `{sessionId,generation,message,delivery?:"steer"|"followUp"}` → `{accepted:true}`. Preserve extension commands, skills and prompt templates via Pi's normal expansion pipeline. Built-in TUI-only commands fail with a terminal fallback, never become model prose. Empty prompts, an active dialog, stale identities and unspecified delivery while working are rejected. Success means accepted, not completed.
 - `agent.abort` `{sessionId,generation}` → `{accepted:true}`.
-- `dialog.respond` `{sessionId,generation,dialogId,revision,action,value?:string}` → `{accepted:true}`. Only advertised actions allowed. Stale revision/id, unknown option, closed/replaced dialog and control characters in free text are rejected. Never synthesize policy verdicts or widen grants.
+- `dialog.respond` `{sessionId,generation,dialogId,revision,action,value?:string}` → `{accepted:true}`. Only advertised actions allowed. Include `value` only when that option advertises `acceptsValue:true`; a dialog having a text field does not make its Back/Submit-key actions text-taking. Stale revision/id, unknown option, closed/replaced dialog and control characters in free text are rejected. Never synthesize policy verdicts or widen grants.
 - `terminal.attach` `{terminalId,control:bool,takeover:bool,cols:int,rows:int}` → `{attached:true}`. Observe first; obtaining input control is an explicit user action. Takeover requires another explicit action. Use Herdr's actual terminal session observe/control JSONL API, **no PTY**. Stream `terminal.frame` and `terminal.closed`.
 - `terminal.input` `{data:string}` → `{accepted:true}`; data is base64 terminal bytes. Writable attachment required.
 - `terminal.resize` `{cols:int,rows:int}` → `{accepted:true}`; writable attachment required.
@@ -57,8 +57,10 @@ Use the live Pi session manager's active branch and message events. Do not creat
 DialogSnapshot:
 ```
 {dialogId:string,revision:int,kind:"permission"|"select"|"confirm"|"input"|"editor"|"terminal",
- title:string,text:string,options:[{id:string,label:string}],acceptsText:bool}
+ title:string,text:string,options:[{id:string,label:string,acceptsValue?:bool}],acceptsText:bool}
 ```
+
+`acceptsText` controls the presence of the native field; each option's optional `acceptsValue` controls whether its individual action carries that field's value (absent means false). Generic input Submit and permission reason Append advertise it; cancel, reason Enter/Back, confirmation and scope actions do not.
 
 Generic dialogs must complete the original Pi UI promise and dismiss only that dialog. For pi-permission-system's custom TUI, reuse the **actual active component's public render/handleInput interface**, version/shape gated. Publish its currently rendered options/confirmation/scope steps. Apply one advertised action at a time to that same component; do not call a fabricated permission resolver or introspect private policy state. Mobile must preserve double confirmation, reason entry and subagent/session scope steps. A component update increments revision; late phone replies cannot act on a newer desktop selection. Unsupported components produce kind `terminal` and no native approval action. Document the compatibility boundary explicitly.
 

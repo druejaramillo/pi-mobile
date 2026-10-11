@@ -42,6 +42,7 @@ struct DictationButton: View {
     let onTranscript: (String) -> Void
     @State private var setup = false
     @State private var operationInFlight = false
+    @State private var ownsRecording = false
 
     var body: some View {
         HStack(spacing: 8) {
@@ -51,13 +52,14 @@ struct DictationButton: View {
                     operationInFlight = true
                     Task {
                         defer { operationInFlight = false }
-                        do { onTranscript(try await dictation.stopRecording()) } catch { }
+                        do { _ = try await dictation.stopRecording() } catch { ownsRecording = false }
                     }
                 } else if dictation.state == "ready" {
                     operationInFlight = true
+                    ownsRecording = true
                     Task {
                         defer { operationInFlight = false }
-                        do { try await dictation.startRecording() } catch { }
+                        do { try await dictation.startRecording() } catch { ownsRecording = false }
                     }
                 } else { setup = true }
             } label: {
@@ -68,11 +70,24 @@ struct DictationButton: View {
             .disabled(operationInFlight || dictation.state == "loading" || dictation.state == "transcribing")
             .accessibilityHint(dictation.state == "recording" ? "Transcribe this recording into the draft" : "Record instructions locally")
             if dictation.state == "recording" {
-                Button("Cancel recording", systemImage: "xmark") { dictation.cancelRecording() }
+                Button("Cancel recording", systemImage: "xmark") {
+                    ownsRecording = false
+                    dictation.cancelRecording()
+                }
                     .labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44)
             } else if dictation.state == "transcribing" {
                 ProgressView().accessibilityLabel("Transcribing on this iPhone")
             }
+        }
+        .onChange(of: dictation.completedTranscriptID) { _, id in
+            guard id != nil, ownsRecording else { return }
+            ownsRecording = false
+            // One delivery path handles manual Stop and the five-minute cap, without duplicate insertion.
+            onTranscript(dictation.transcript)
+        }
+        .onDisappear {
+            if ownsRecording { dictation.cancelRecording() }
+            ownsRecording = false
         }
         .sheet(isPresented: $setup) {
             NavigationStack {

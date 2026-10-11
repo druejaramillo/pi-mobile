@@ -176,7 +176,7 @@ private struct PiDialogPanel: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(dialog.options) { option in
-                            Button(option.label) { respond(option.id) }.buttonStyle(.bordered).frame(minHeight: 44)
+                            Button(option.label) { respond(option) }.buttonStyle(.bordered).frame(minHeight: 44)
                         }
                     }
                 }.disabled(sending || connection.state != "connected")
@@ -186,16 +186,18 @@ private struct PiDialogPanel: View {
         .onChange(of: dialog.dialogId) { _, _ in text = ""; error = nil }
     }
 
-    private func respond(_ action: String) {
+    private func respond(_ option: PiDialogOption) {
         guard !sending else { return }
         sending = true
+        let submitted = text
         var params: [String: BridgeJSON] = ["sessionId": .string(snapshot.sessionId), "generation": .string(snapshot.generation),
-            "dialogId": .string(dialog.dialogId), "revision": .number(Double(dialog.revision)), "action": .string(action)]
-        if dialog.acceptsText { params["value"] = .string(text) }
+            "dialogId": .string(dialog.dialogId), "revision": .number(Double(dialog.revision)), "action": .string(option.id)]
+        if option.acceptsValue == true { params["value"] = .string(submitted) }
         Task {
             defer { sending = false }
             do {
                 _ = try await connection.request(method: "dialog.respond", params: .object(params))
+                if dialog.kind == "permission", option.acceptsValue == true, text == submitted { text = "" }
                 error = nil
             } catch { self.error = error.localizedDescription }
         }

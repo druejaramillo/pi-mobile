@@ -16,6 +16,24 @@ struct GlobalAgentsView: View {
         }
     }
 
+    private var emptyDirectoryTitle: String {
+        if !search.isEmpty { return "No matching agents" }
+        if !sessions.refreshing.isEmpty { return "Checking machines" }
+        if machines.machines.contains(where: { sessions.machineErrors[$0.id] != nil }) {
+            return "Some machines are unavailable"
+        }
+        return "No agents found"
+    }
+
+    private var emptyDirectoryDescription: String {
+        if !search.isEmpty { return "Try a machine, workspace, tab or project name." }
+        if !sessions.refreshing.isEmpty { return "Each machine is checked independently." }
+        if machines.machines.contains(where: { sessions.machineErrors[$0.id] != nil }) {
+            return "Reconnect unavailable machines to check their agents."
+        }
+        return "Refresh reachable machines, or open Machines to start work in an existing terminal."
+    }
+
     var body: some View {
         Group {
             if machines.machines.isEmpty {
@@ -31,10 +49,8 @@ struct GlobalAgentsView: View {
                 List {
                     if entries.isEmpty {
                         Section {
-                            ContentUnavailableView(search.isEmpty ? "No agents found" : "No matching agents",
-                                systemImage: "person.2", description: Text(search.isEmpty
-                                    ? "Refresh reachable machines, or open Machines to start work in an existing terminal."
-                                    : "Try a machine, workspace, tab or project name."))
+                            ContentUnavailableView(emptyDirectoryTitle, systemImage: "person.2",
+                                description: Text(emptyDirectoryDescription))
                         }
                     } else {
                         Section {
