@@ -2,7 +2,7 @@
 
 A native iPhone companion to **existing Herdr and Pi sessions**, reached directly over SSH/Tailscale. Local Parakeet v3 dictation. Actual Plannotator reviews inside the app. **No notifications or push service.**
 
-This repository contains an integrated source checkpoint, **not a device-verified release**. The Mac lane uses **Xcode 26+ / Swift 6.2+**. The parallel **Linux/xtool** lane now compiles and links the real arm64 iPhone app with an Apple-supplied SDK. The signed app has been installed successfully over USB on an iPhone. The user reports successful Tailscale sign-in and machine creation, followed by a connection failure. The SSH error-masking fix has now been installed in place after authorization; retry on the retained machine is pending. Successful end-to-end device behavior remains unverified. See [PRODUCT.md](PRODUCT.md) for the approved behavior and [bridge protocol](docs/BRIDGE_PROTOCOL.md) for the shared interface.
+This repository contains an integrated source checkpoint, **not a device-verified release**. The Mac lane uses **Xcode 26+ / Swift 6.2+**. The parallel **Linux/xtool** lane now compiles and links the real arm64 iPhone app with an Apple-supplied SDK. The signed app has been installed successfully over USB on an iPhone. The user now reports a working connection after correcting the host bridge path, but offline/cached directory status. The foreground-status fix is built and tested, not yet installed. A project-local Pi extension opt-in has been added; manual `/reload` in the chosen Pi process activates it. End-to-end device behavior remains unverified. See [PRODUCT.md](PRODUCT.md) for the approved behavior and [bridge protocol](docs/BRIDGE_PROTOCOL.md) for the shared interface.
 
 ## Start on your Mac
 
@@ -24,7 +24,7 @@ The launch **Agents** tab indexes existing agents across your machines, with sta
 ./tools/build-ios-linux.sh
 ```
 
-Follow [Linux setup](docs/LINUX_SETUP.md) for the Apple-provided SDK, private toolchain, signing and explicit USB deployment. Twenty-six Core XCTest methods pass on this Linux machine, and full/repeated unsigned app builds succeed. The signed app is **installed on an iPhone**; sign-in/setup are user-reported, but a successful SSH/bridge connection remains outstanding. The Mac build remains available.
+Follow [Linux setup](docs/LINUX_SETUP.md) for the Apple-provided SDK, private toolchain, signing and explicit USB deployment. Thirty-eight Core XCTest methods pass on this Linux machine, and full/repeated unsigned app builds succeed. An earlier signed build is **installed on an iPhone**; the user reports a working connection. The new foreground-status fix still requires an authorized update and native verification. The Mac build remains available.
 
 ## Layout
 
@@ -47,4 +47,4 @@ SSH host keys come from authenticated Tailscale coordination data, or an existin
 
 ## Current verification
 
-**23 host protocol tests pass**, alongside TypeScript/JavaScript and importer checks. Twenty-six Core XCTest methods compile and pass on Linux; nineteen app-hosted XCTest methods remain uncompiled/unrun; [testing instructions](docs/TESTING.md) describe exact coverage and limits. See [build status](docs/BUILD_STATUS.md) for exact checks, compatibility boundaries and unresolved gates. The Linux iOS compile/link/package pass is verified; Mac/Xcode validation and a physical iPhone pass remain required before calling this usable on-device. Compilation is not runtime proof.
+**24 host protocol tests pass**, alongside TypeScript/JavaScript and importer checks. Thirty-eight Core XCTest methods compile and pass on Linux; nineteen app-hosted XCTest methods remain uncompiled/unrun; [testing instructions](docs/TESTING.md) describe exact coverage and limits. See [build status](docs/BUILD_STATUS.md) for exact checks, compatibility boundaries and unresolved gates. The Linux iOS compile/link/package pass is verified; Mac/Xcode validation and a physical iPhone pass remain required before calling this usable on-device. Compilation is not runtime proof.

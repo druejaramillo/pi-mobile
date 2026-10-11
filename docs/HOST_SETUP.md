@@ -63,7 +63,7 @@ Pi Mobile retrieves the exact peer's advertised host keys from its authenticated
 
 Existing saved fields and Keychain credentials are not reset. Saved Tailscale profiles use automatic coordination keys rather than their old copied pin, without rewriting that stored field. Legacy SSH profiles keep using their saved pin/credential until **Switch to Tailscale SSH** is explicitly chosen and saved. Switching validates automatic lookup before persistence; Cancel changes nothing. Old Keychain items are retained on migration and removed only when you remove the saved machine.
 
-## Install deliberately (not performed by this implementation)
+## Install deliberately (never automatic)
 
 Review `host/` before enabling it. For basic Herdr browsing, use the existing checkout path as above; there is no additional npm installation step. The following installs pinned development/checking dependencies, not the runtime bridge or a background service:
 
@@ -73,6 +73,24 @@ npm ci --ignore-scripts --legacy-peer-deps
 ```
 
 Dependencies are exactly pinned in `host/package-lock.json`; runtime uses only Node built-ins and the Pi extension API. No second Pi package is installed or bundled.
+
+### Enable an existing Pi process in this checkout
+
+The extension already exists at `host/pi-mobile-extension.ts`. To enable it only for Pi processes using this project, create a **new** `.pi/extensions/pi-mobile.ts` in the checkout (do not overwrite an existing extension):
+
+```ts
+export { default } from '../../host/pi-mobile-extension.ts';
+```
+
+The project-local wrapper is developer runtime configuration and is ignored by Git. Pi loads it on the next startup or deliberate reload; creating the file does not activate it in running agents.
+
+1. In the **chosen existing Pi terminal**, let the active turn finish and close any active dialog.
+2. Enter **`/reload`** there. This keeps that Pi's session/history but reloads its extensions; it does not restart Herdr or other Pi processes. Do not send it to every agent.
+3. On the phone, refresh the machine and open the pane containing that Pi process. Native conversation controls should become available once its `pi_mobile` token is advertised. If they do not, preserve the terminal fallback and check host setup; do not restart sessions or weaken identity verification.
+
+No npm install, new Pi process or model client is required for this opt-in. For other projects, choose their opt-in separately rather than changing global Pi settings automatically.
+
+### Opt in for a new Pi invocation
 
 To opt in for a **new, explicitly chosen** Pi invocation inside a Herdr pane:
 
@@ -125,4 +143,4 @@ PI_MOBILE_PI_ROOT=/path/to/node_modules/@earendil-works/pi-coding-agent npm run 
 
 This performs strict TypeScript/checkJs validation against Pi's actual declarations without creating another Pi or calling a model. The temporary local typecheck configuration is removed afterward. JavaScript syntax can also be checked with `node --check` on `host/*.mjs` and `host/lib/*.mjs`.
 
-The approved host protocol suite now passes 23 tests (`npm test`) against the real CLI/extension and isolated external Pi/Herdr peers. See [TESTING.md](TESTING.md). It exercises reconnect/duplicate/stale-dialog guards and control sequencing without touching live sessions or calling a model. It does **not** prove actual permission-component rendering or audit/scoping behavior. The iOS app now compiles/links/packages and has been installed; the user reports sign-in/setup but a failing connection. No live permission interaction or successful iPhone SSH/bridge round-trip is verified. Use deliberately chosen dedicated sessions for those checks before daily use.
+The approved host protocol suite now passes 24 tests (`npm test`) against the real CLI/extension and isolated external Pi/Herdr peers. See [TESTING.md](TESTING.md). It exercises reconnect/duplicate/stale-dialog guards and control sequencing without touching live sessions or calling a model. It does **not** prove actual permission-component rendering or audit/scoping behavior. The iOS app compiles/links/packages. The user now reports a working connection after correcting the checkout path, but stale/offline directory status. The foreground-status fix is built, not yet deployed or verified on the phone. No live permission interaction or independently correlated iPhone SSH/bridge round-trip is verified. Use deliberately chosen dedicated sessions for those checks before daily use.
