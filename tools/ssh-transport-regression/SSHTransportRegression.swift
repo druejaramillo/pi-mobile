@@ -27,7 +27,7 @@ struct SSHTransportRegression {
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let serverSockets = SSHChannelOwnership(limit: 16)
         let hostKey = NIOSSHPrivateKey(ed25519Key: Curve25519.Signing.PrivateKey())
-        let server = try await bindSSHServer(group: group, sockets: serverSockets, hostKey: hostKey,
+        let server = try await bindSSHServer(group: group, sockets: serverSockets, hostKeys: [hostKey],
             authentication: SSHRegressionPasswordDelegate())
         var keylessServer: Channel?
         do {
@@ -49,7 +49,9 @@ struct SSHTransportRegression {
             try await verifySSHLoginTeardown(profile: profile, group: group, serverSockets: serverSockets)
             print("PASS: closing owned sockets during stalled login terminates promptly.")
 
-            let keyless = try await bindSSHServer(group: group, sockets: serverSockets, hostKey: hostKey,
+            // Real SSH/Tailscale servers advertise several host key types; an Ed25519 pin must still work.
+            let ecdsaHostKey = NIOSSHPrivateKey(p256Key: P256.Signing.PrivateKey())
+            let keyless = try await bindSSHServer(group: group, sockets: serverSockets, hostKeys: [ecdsaHostKey, hostKey],
                 authentication: SSHRegressionTailscaleDelegate())
             keylessServer = keyless
             guard let keylessPort = keyless.localAddress?.port else { throw SSHRegressionFailure.failed("keyless server port") }
@@ -59,6 +61,7 @@ struct SSHTransportRegression {
             // Even an explicitly supplied old secret must not be offered in Tailscale mode.
             try await verifySSHConnection(profile: tailscale, secret: "unused-old-credential")
             print("PASS: keyless Tailscale SSH offers none, authenticates repeatedly, and never sends an old credential.")
+            print("PASS: a verified Ed25519 host pin works when the server also advertises an ECDSA host key.")
 
             var deniedUser = tailscale
             deniedUser.username = "not-allowed"
@@ -104,7 +107,7 @@ struct SSHTransportRegression {
         }
     }
 
-    private static func bindSSHServer(group: EventLoopGroup, sockets: SSHChannelOwnership, hostKey: NIOSSHPrivateKey,
+    private static func bindSSHServer(group: EventLoopGroup, sockets: SSHChannelOwnership, hostKeys: [NIOSSHPrivateKey],
                                       authentication: NIOSSHServerUserAuthenticationDelegate) async throws -> Channel {
         try await ServerBootstrap(group: group)
             .childChannelInitializer { channel in
@@ -112,7 +115,7 @@ struct SSHTransportRegression {
                     return channel.eventLoop.makeFailedFuture(SSHRegressionFailure.failed("server socket ownership"))
                 }
                 let handler = NIOSSHHandler(
-                    role: .server(SSHServerConfiguration(hostKeys: [hostKey], userAuthDelegate: authentication)),
+                    role: .server(SSHServerConfiguration(hostKeys: hostKeys, userAuthDelegate: authentication)),
                     allocator: channel.allocator,
                     inboundChildChannelInitializer: nil
                 )

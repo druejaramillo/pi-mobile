@@ -39,7 +39,11 @@ Substitute your actual identity/account and merge deliberately into your existin
 
 ### Verify the public host identity
 
-The iOS app cannot read the system Tailscale app's coordination data. It therefore still requires a **verified public host key**, not a private login credential. From another trusted, authenticated Tailscale device, copy the destination's advertised Ed25519 public key:
+Tailscale SSH needs **no user SSH keypair**. A file such as `~/.ssh/id_ed25519.pub` is normally a user-login public key, not the server's host identity; pasting it into the app causes `Citadel.InvalidHostKey`. Login credentials and server identity are different.
+
+Tailscale distributes the server's public host keys, and the `tailscale ssh` CLI verifies them automatically against coordination data. Pi Mobile does not yet integrate that trusted lookup: the manual public-host-key field is a limitation of this app, not a requirement to manage your own keys for Tailscale SSH. It cannot safely treat an arbitrary scanned key as trusted.
+
+From **another** trusted, authenticated Tailscale device—not the destination host itself—copy the destination's advertised Ed25519 public host key:
 
 ```sh
 tailscale status --json | jq -r --arg host 'your-host.your-tailnet.ts.net.' \
