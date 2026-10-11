@@ -4,7 +4,7 @@ import PackageDescription
 // Staged at .build/ssh-transport-regression so the executable compiles the app's actual transport sources.
 let package = Package(
     name: "SSHTransportRegression",
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS(.v15)],
     dependencies: [
         .package(path: "../../ios/PiMobileCore"),
         .package(path: "../../ios/.patched-dependencies/Citadel"),

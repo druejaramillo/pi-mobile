@@ -1,0 +1,2 @@
+# Unified patches require a space on blank context lines for exact source-diff verification.
+tools/patches/*.patch whitespace=-blank-at-eol

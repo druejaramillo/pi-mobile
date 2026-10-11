@@ -16,10 +16,35 @@ import Glibc
 @main
 struct SSHTransportRegression {
     static func main() async {
-        do { try await runSSHRegression() }
+        do {
+            if CommandLine.arguments.contains("--exec-only") { try await runSSHExecRegression() }
+            else { try await runSSHRegression() }
+        }
         catch {
             FileHandle.standardError.write(Data("FAIL: SSH transport regression: \(error)\n".utf8))
             exit(1)
+        }
+    }
+
+    private static func runSSHExecRegression() async throws {
+        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let sockets = SSHChannelOwnership(limit: 8)
+        let key = NIOSSHPrivateKey(ed25519Key: Curve25519.Signing.PrivateKey())
+        let server = try await bindSSHServer(group: group, sockets: sockets, hostKeys: [key],
+                                             authentication: SSHRegressionTailscaleDelegate())
+        do {
+            guard let port = server.localAddress?.port else { throw SSHRegressionFailure.failed("exec fixture server port") }
+            let commands: [String]? = CommandLine.arguments.contains("--early-exit-only") ? ["fixture-missing-bridge"] : nil
+            try await verifySSHExecLifecycle(port: port, hostKeys: [key], sockets: sockets, commands: commands,
+                                             useSocketpair: !CommandLine.arguments.contains("--raw-tcp"))
+            sockets.close()
+            try await server.close().get()
+            try await group.shutdownGracefully()
+        } catch {
+            sockets.close()
+            try? await server.close().get()
+            try? await group.shutdownGracefully()
+            throw error
         }
     }
 
@@ -65,6 +90,8 @@ struct SSHTransportRegression {
             try await verifySSHCoordinationKeys(port: keylessPort, hostKeys: [hostKey, ecdsaHostKey], sockets: serverSockets)
             print("PASS: advertised host-key sets authenticate over an adopted userspace socketpair without a manual pin.")
             print("PASS: automatic identity rejects wrong, malformed, missing and unsupported-only keys; legacy pins cannot be overridden.")
+            try await verifySSHExecLifecycle(port: keylessPort, hostKeys: [hostKey, ecdsaHostKey], sockets: serverSockets)
+            try await verifySSHExecLifecycle(port: keylessPort, hostKeys: [hostKey, ecdsaHostKey], sockets: serverSockets, useSocketpair: false)
 
             var deniedUser = tailscale
             deniedUser.username = "not-allowed"
@@ -158,6 +185,57 @@ struct SSHTransportRegression {
         } catch SSHBridgeError.invalidProfile(_) {}
     }
 
+    private static func verifySSHExecLifecycle(port: Int, hostKeys: [NIOSSHPrivateKey], sockets: SSHChannelOwnership,
+                                               commands: [String]? = nil,
+                                               useSocketpair: Bool = true) async throws {
+        let profile = MachineProfile(name: "Exec lifecycle only", hostname: useSocketpair ? "fixture.tail-test.ts.net" : "127.0.0.1",
+            port: useSocketpair ? 22 : port, username: "regression", hostPublicKey: String(openSSHPublicKey: hostKeys[0].publicKey))
+        let configuration = try SSHBridgeConfiguration(profile: profile,
+            trustedHostKeys: useSocketpair ? hostKeys.map { String(openSSHPublicKey: $0.publicKey) } : nil)
+        for command in commands ?? ["fixture-echo", "fixture-missing-bridge", "fixture-exit-one", "fixture-exit-zero", "fixture-callback-error"] {
+            let ownership = SSHChannelOwnership(limit: 1)
+            defer { ownership.close() }
+            let descriptor = useSocketpair ? try await relayedSSHSocket(port: port, sockets: sockets) : nil
+            let client = try await SSHOwnedClient.connect(configuration: configuration,
+                authentication: configuration.authenticationMethod(), ownership: ownership, connectedSocket: descriptor)
+            defer { Task { try? await client.close() } }
+            var receivedEcho = false
+            let transport = useSocketpair ? "socketpair" : "raw TCP"
+            do {
+                try await SSHBridgeExec.run(client: client, command: command) { inbound, outbound in
+                    if command == "fixture-echo" { try await outbound.write(ByteBuffer(string: "fixture JSONL input\n")) }
+                    for try await output in inbound {
+                        if command == "fixture-echo", case .stdout(let bytes) = output {
+                            guard String(buffer: bytes) == "fixture JSONL input\n" else {
+                                throw SSHRegressionFailure.failed("SSH exec changed fixture stdin/stdout")
+                            }
+                            receivedEcho = true
+                            break
+                        }
+                    }
+                    if command == "fixture-callback-error" { throw SSHBridgeError.protocolViolation("fixture callback failure") }
+                }
+                if command == "fixture-echo", receivedEcho {
+                    print("PASS: authenticated \(transport) SSH exec carries bidirectional bridge bytes.")
+                } else if command == "fixture-exit-zero" {
+                    print("PASS: remote EOF after exit 0 does not become alreadyClosed on \(transport).")
+                } else { throw SSHRegressionFailure.failed("early exit or callback failure must retain its original error") }
+            } catch {
+                if let expectedExit = ["fixture-missing-bridge": 127, "fixture-exit-one": 1][command],
+                   case SSHBridgeError.hostBridgeExited(let status) = error, status == expectedExit {
+                    guard error.localizedDescription.contains("exit \(status)"),
+                          error.localizedDescription.contains("saved path"), error.localizedDescription.contains("PATH") else {
+                        throw SSHRegressionFailure.failed("remote bridge exit must explain the host setup checks")
+                    }
+                    print("PASS: early bridge exit \(status) remains an actionable host error on \(transport), not NIO error 6.")
+                } else if command == "fixture-callback-error",
+                          case SSHBridgeError.protocolViolation("fixture callback failure") = error {
+                    print("PASS: exec cleanup preserves the original callback error after remote close on \(transport).")
+                } else { throw error }
+            }
+        }
+    }
+
     private static func relayedSSHSocket(port: Int, sockets: SSHChannelOwnership) async throws -> Int32 {
         var pair: [Int32] = [-1, -1]
         #if canImport(Darwin)
@@ -197,7 +275,10 @@ struct SSHTransportRegression {
                 let handler = NIOSSHHandler(
                     role: .server(SSHServerConfiguration(hostKeys: hostKeys, userAuthDelegate: authentication)),
                     allocator: channel.allocator,
-                    inboundChildChannelInitializer: nil
+                    inboundChildChannelInitializer: { child, type in
+                        guard type == .session else { return child.eventLoop.makeFailedFuture(SSHBridgeError.invalidReview) }
+                        return child.pipeline.addHandler(SSHRegressionExecResponder())
+                    }
                 )
                 return channel.eventLoop.makeCompletedFuture {
                     try channel.pipeline.syncOperations.addHandler(handler)
@@ -266,6 +347,44 @@ struct SSHTransportRegression {
         guard disconnected, Date().timeIntervalSince(started) < 3 else {
             throw SSHRegressionFailure.failed("socket teardown during login must fail promptly, not wait for authentication")
         }
+    }
+}
+
+/// A synthetic SSH exec peer, not an actual shell, host bridge, or local subprocess.
+private final class SSHRegressionExecResponder: ChannelInboundHandler, @unchecked Sendable {
+    typealias InboundIn = SSHChannelData
+    private var echo = false
+
+    func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
+        guard let request = event as? SSHChannelRequestEvent.ExecRequest else {
+            context.fireUserInboundEventTriggered(event)
+            return
+        }
+        if request.command == "fixture-echo" {
+            echo = true
+            context.triggerUserOutboundEvent(ChannelSuccessEvent(), promise: nil)
+        } else {
+            let status: Int
+            switch request.command {
+            case "fixture-missing-bridge": status = 127
+            case "fixture-exit-one": status = 1
+            case "fixture-exit-zero", "fixture-callback-error": status = 0
+            default:
+                context.triggerUserOutboundEvent(ChannelFailureEvent(), promise: nil)
+                context.close(promise: nil)
+                return
+            }
+            context.triggerUserOutboundEvent(ChannelSuccessEvent(), promise: nil)
+            if status != 0 {
+                context.writeAndFlush(NIOAny(SSHChannelData(type: .stdErr, data: .byteBuffer(ByteBuffer(string: "fixture bridge could not start\n")))), promise: nil)
+            }
+            context.triggerUserOutboundEvent(SSHChannelRequestEvent.ExitStatus(exitStatus: status), promise: nil)
+            context.close(promise: nil)
+        }
+    }
+
+    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+        if echo { context.writeAndFlush(data, promise: nil) }
     }
 }
 

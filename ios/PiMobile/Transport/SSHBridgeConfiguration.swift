@@ -11,6 +11,7 @@ public enum SSHBridgeError: Error, LocalizedError {
     case invalidSecret
     case tailscaleSSHUnavailable
     case hostIdentityMismatch
+    case hostBridgeExited(Int)
     case disconnected
     case requestDeadline
     case protocolViolation(String)
@@ -23,6 +24,7 @@ public enum SSHBridgeError: Error, LocalizedError {
         case .invalidSecret: return "Saved SSH credential invalid: switch this machine to Tailscale SSH after enabling it on the host."
         case .tailscaleSSHUnavailable: return "Tailscale SSH login failed: enable SSH on the host and allow this username with an accept rule in the tailnet policy. Interactive check-mode sign-in is not supported."
         case .hostIdentityMismatch: return "SSH host identity mismatch: the server key does not match this machine's trusted identity. Check the destination and its Tailscale SSH setup; no connection was accepted."
+        case .hostBridgeExited(let status): return "Host bridge stopped (exit \(status)): check that the bridge is installed at the saved path, the Herdr session exists, and Node 22.19+ and Herdr are available in this SSH user's noninteractive PATH. Delivery may be uncertain; reconnect for fresh state before acting again. Pi Mobile does not install the bridge or start host sessions."
         case .disconnected: return "SSH bridge disconnected: command delivery may be uncertain; refresh before acting again."
         case .requestDeadline: return "SSH bridge deadline exceeded: command delivery may be uncertain; do not replay it automatically."
         case .protocolViolation(let reason): return "SSH bridge protocol invalid: \(reason)"

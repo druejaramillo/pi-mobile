@@ -16,6 +16,7 @@ packages:
     path: PiMobileCore
   TailscaleClient:
     path: TailscaleClient
+  # Same source pin and checked-in event-loop/exec-cleanup patches as the xtool lane.
   Citadel:
     path: .patched-dependencies/Citadel
   SwiftTerm:

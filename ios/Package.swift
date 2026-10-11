@@ -20,7 +20,7 @@ let package = Package(
     dependencies: [
         .package(path: "PiMobileCore"),
         .package(path: "TailscaleClient"),
-        // Same pinned revision plus the checked-in existing-channel event-loop fix, on both build lanes.
+        // Same pinned revision plus checked-in event-loop and exec-cleanup fixes on both build lanes.
         .package(path: ".patched-dependencies/Citadel"),
         // Prepared from the original pin plus the single checked-in manifest patch.
         .package(path: ".xtool-dependencies/SwiftTerm"),

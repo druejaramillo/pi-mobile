@@ -169,7 +169,7 @@ public final class SSHBridgeConnection: ObservableObject {
             }
             execTask = Task { @MainActor [weak self] in
                 do {
-                    try await client.withExec(command) { [weak self] inbound, outbound in
+                    try await SSHBridgeExec.run(client: client, command: command) { [weak self] inbound, outbound in
                         guard self?.epoch == token else { throw SSHBridgeError.disconnected }
                         self?.writer = outbound
                         self?.readyDeadline?.cancel()
@@ -193,7 +193,7 @@ public final class SSHBridgeConnection: ObservableObject {
                         }
                         try framer.validateEndOfStream()
                     }
-                    self?.channelLost(token: token, error: SSHBridgeError.disconnected)
+                    self?.channelLost(token: token, error: SSHBridgeError.hostBridgeExited(0))
                 } catch { self?.channelLost(token: token, error: error) }
             }
         }

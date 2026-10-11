@@ -12,7 +12,7 @@ fixture="$root/.build/ssh-transport-regression"
 mkdir -p "$fixture/Sources/SSHTransportRegression" "$root/ios/TestResults"
 cp "$root/tools/ssh-transport-regression/Package.swift" "$fixture/Package.swift"
 cp "$root/ios/Package.resolved" "$fixture/Package.resolved"
-for source in SSHOwnedClient SSHBridgeConfiguration SSHChannelOwnership; do
+for source in SSHOwnedClient SSHBridgeConfiguration SSHChannelOwnership SSHBridgeExec; do
   ln -sfn "$root/ios/PiMobile/Transport/$source.swift" "$fixture/Sources/SSHTransportRegression/$source.swift"
 done
 ln -sfn "$root/tools/ssh-transport-regression/SSHTransportRegression.swift" "$fixture/Sources/SSHTransportRegression/SSHTransportRegression.swift"
@@ -30,4 +30,4 @@ if [[ $(uname -s) == Linux ]]; then
 fi
 # A precondition failure must fail the command, not become a silently ignored core dump.
 ulimit -c 0
-swift run --package-path "$fixture" --jobs 4 SSHTransportRegression 2>&1 | tee "$root/ios/TestResults/ssh-transport-regression.log"
+swift run --package-path "$fixture" --jobs 4 SSHTransportRegression "$@" 2>&1 | tee "$root/ios/TestResults/ssh-transport-regression.log"

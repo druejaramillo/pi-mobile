@@ -1,0 +1,24 @@
+diff --git a/Sources/Citadel/TTY/Client/TTY.swift b/Sources/Citadel/TTY/Client/TTY.swift
+index 02946e7..826283c 100644
+--- a/Sources/Citadel/TTY/Client/TTY.swift
++++ b/Sources/Citadel/TTY/Client/TTY.swift
+@@ -464,7 +464,8 @@ extension SSHClient {
+         )
+ 
+         func close() async throws {
+-            try await channel.close()
++            do { try await channel.close() }
++            catch ChannelError.alreadyClosed { /* The remote command may close before cleanup. */ }
+         }
+ 
+         do {
+@@ -472,7 +473,8 @@ extension SSHClient {
+             try await perform(inbound, TTYStdinWriter(channel: channel))
+             try await close()
+         } catch {
+-            try await close()
++            // Cleanup must never replace the original remote exit or callback failure.
++            try? await close()
+             throw error
+         }
+     }
