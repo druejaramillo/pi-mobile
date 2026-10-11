@@ -70,7 +70,7 @@ Alternatively the user may install the local host package through Pi's normal pa
 
 The extension requires inherited `HERDR_ENV=1`, `HERDR_SOCKET_PATH`, and `HERDR_PANE_ID`. It resolves `pane.current` against the inherited caller identity, including after a pane move. There is no UI-focus fallback. Native permission version detection reads only the public package manifest at `~/.pi/agent/npm/node_modules/@gotgenes/pi-permission-system/package.json`. For another installation layout, set `PI_MOBILE_PERMISSION_PACKAGE` to that package's directory **in the Pi process environment**. It never reads permission configuration or private component state.
 
-Configure the phone's SSH exec command with an explicit existing Herdr session:
+In the phone's **Host bridge** settings, enter the actual checkout's `/path/to/pi-mobile/host/bridge-cli.mjs` as **Bridge path**, and the explicit existing session name as **Herdr session**. The default `.local/share/pi-mobile/host/bridge-cli.mjs` is relative to the remote account's home; it is not an installed or downloaded bridge. Do not paste a full shell command into the path field. The corresponding exec command is:
 
 ```sh
 node /path/to/pi-mobile/host/bridge-cli.mjs --session default
@@ -79,6 +79,12 @@ node /path/to/pi-mobile/host/bridge-cli.mjs --session default
 Use the real configured session name; `default` is an example. Names must be 1–64 ASCII letters/digits/underscore/hyphen, starting with a letter or digit. SSH must use **exec without a PTY** (`ssh -T` for manual use), never a shell/PTY terminal channel. The native client currently invokes `node` from the SSH account's **noninteractive PATH**; confirm that this PATH contains the required Node and Herdr before connecting. A per-profile Node executable override is not implemented. Choose any host PATH changes yourself; this repository never makes them automatically. An optional administrator-owned `PI_MOBILE_HERDR_BIN` chooses an executable; it is passed to `spawn`, not a shell. The phone cannot choose executables, socket paths, or arbitrary URLs.
 
 Tailscale and host-key verification are client prerequisites. SSH stdout carries only LF-delimited JSON records, stderr diagnostics. No TCP listener, credentials, background agent, model client, or notification sender is installed.
+
+## If the SSH command closes immediately
+
+The client previously masked a remote command failure as `NIOCore.ChannelError error 6` (`alreadyClosed`) during cleanup. The corrected build preserves the exit status and presents **Host bridge stopped (exit …)**. This is not permission to weaken host verification or reset the machine/Tailscale login. A reproduced exit 127 models missing executable setup; it is not proof of the cause on your host.
+
+Deliberately check the chosen host/account's actual bridge path, Node 22.19+ and Herdr in its **noninteractive SSH environment**, and the existing Herdr session name. Node available only through an interactive version-manager startup script may not be on SSH exec's PATH. Make any installation/PATH changes yourself; the app neither installs the bridge nor starts host sessions. Bridge installation and Tailscale sign-in are separate steps. If delivery may have occurred, reconnect for fresh authoritative state rather than replaying a mutation.
 
 ## Behavior and safety
 
@@ -105,4 +111,4 @@ PI_MOBILE_PI_ROOT=/path/to/node_modules/@earendil-works/pi-coding-agent npm run 
 
 This performs strict TypeScript/checkJs validation against Pi's actual declarations without creating another Pi or calling a model. The temporary local typecheck configuration is removed afterward. JavaScript syntax can also be checked with `node --check` on `host/*.mjs` and `host/lib/*.mjs`.
 
-The approved host protocol suite now passes 23 tests (`npm test`) against the real CLI/extension and isolated external Pi/Herdr peers. See [TESTING.md](TESTING.md). It exercises reconnect/duplicate/stale-dialog guards and control sequencing without touching live sessions or calling a model. It does **not** prove actual permission-component rendering or audit/scoping behavior. No live permission interaction, SSH device round-trip or iOS build has been run; use deliberately chosen dedicated sessions for those checks before daily use.
+The approved host protocol suite now passes 23 tests (`npm test`) against the real CLI/extension and isolated external Pi/Herdr peers. See [TESTING.md](TESTING.md). It exercises reconnect/duplicate/stale-dialog guards and control sequencing without touching live sessions or calling a model. It does **not** prove actual permission-component rendering or audit/scoping behavior. The iOS app now compiles/links/packages and has been installed; the user reports sign-in/setup but a failing connection. No live permission interaction or successful iPhone SSH/bridge round-trip is verified. Use deliberately chosen dedicated sessions for those checks before daily use.
