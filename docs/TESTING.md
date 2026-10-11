@@ -91,7 +91,7 @@ On the Simulator or deliberately installed iPhone build, capture the actual scre
 - A live supported dialog retains its exact action labels, original prompt, reason/value entry, grant widths and confirmation stages. All content and actions remain reachable with the keyboard and large text. Glass styling must not favor a permission outcome.
 - Terminal observation stays read-only, control remains explicit and takeover/Stop retain their confirmations. Review dismissal returns to the same agent.
 
-Use dedicated disposable sessions for mutation checks. No screenshots, UI runtime checks or deployments were performed for this refresh; compilation and Core tests are not substitutes.
+Use dedicated disposable sessions for mutation checks. The refreshed app was subsequently signed and successfully installed over USB after explicit user authorization. No screenshots or UI runtime checks have been captured for this refresh; installation, compilation and Core tests are not substitutes.
 
 ## Still outside automated proof
 

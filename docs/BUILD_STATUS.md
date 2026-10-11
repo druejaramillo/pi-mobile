@@ -57,7 +57,9 @@ The native material refresh is committed/pushed in `89497f3` (shared glass style
 
 The refreshed app's actual arm64 compile/link/package passes, including two source-change rebuilds: `ios/TestResults/xtool-build-20261011T075958Z.log` and `ios/TestResults/xtool-build-20261011T080147Z.log`. Thirteen current platform-neutral Core tests pass. The harness Swift checker remains unavailable; the real cross-build is the compile evidence, not a skipped check.
 
-The independent source reviewer scored both named accessory-overflow and Follow-output findings resolved after corrections. **Native finish-review disposition: recapture.** No actual refresh screenshots, UI runtime tests or deployment occurred in this session; no visual ship verdict exists. [DESIGN.md](../DESIGN.md), its native sidecar and the [inspection checklist](TESTING.md#liquid-glass--required-native-inspection) describe the source system and remaining native checks without treating compilation as appearance proof.
+The independent source reviewer scored both named accessory-overflow and Follow-output findings resolved after corrections. **Native finish-review disposition: recapture.** No actual refresh screenshots or UI runtime tests have been captured; no visual ship verdict exists. [DESIGN.md](../DESIGN.md), its native sidecar and the [inspection checklist](TESTING.md#liquid-glass--required-native-inspection) describe the source system and remaining native checks without treating compilation as appearance proof.
+
+Follow-up authorized USB installation (2026-10-11): rebuilt revision `ce51440` (`ios/TestResults/xtool-build-20261011T081003Z.log`), validated the existing pairing and confirmed Developer Mode was already enabled on the connected iPhone running iOS 26.6.2, then ran the explicit deployment script once. Provisioning, signing, installation and installer verification completed with `Successfully installed!`; no certificate-revocation prompt appeared. The refreshed app is installed. Launch, appearance and interaction checks remain human verification gates; installation is not runtime proof.
 
 ## Compatibility and follow-up gates
 
