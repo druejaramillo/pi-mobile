@@ -30,6 +30,7 @@ public final class SSHBridgeConnection: ObservableObject {
     private var renderHistory = TerminalRenderHistory()
     private var reviews: [UUID: OwnedReviewTunnel] = [:]
     private var backgroundSubscription: AnyCancellable?
+    private var tailscale: TailscaleService?
 
     /// Creates an idle connection; the native coordinator must explicitly connect after foregrounding.
     public init() {
@@ -39,7 +40,13 @@ public final class SSHBridgeConnection: ObservableObject {
             }
     }
 
-    /// Connects once with a pinned host key; only legacy SSH needs a secret from the native Keychain owner.
+    /// The app injects its single tailnet identity; standalone legacy callers remain compatible.
+    convenience init(tailscale: TailscaleService) {
+        self.init()
+        self.tailscale = tailscale
+    }
+
+    /// Connects with authenticated coordination keys for Tailscale, or the saved pin for legacy SSH.
     public func connect(profile: MachineProfile, secret: String? = nil) async throws {
         disconnect()
         lastError = nil
@@ -50,10 +57,20 @@ public final class SSHBridgeConnection: ObservableObject {
         ownership = sockets
         do {
             try await withTaskCancellationHandler {
-                let configuration = try SSHBridgeConfiguration(profile: profile)
+                let configuration: SSHBridgeConfiguration
+                var socket: TailscaleSSHSocket?
+                if profile.authentication == "tailscale" {
+                    guard let tailscale else { throw TailscaleIdentityError.signInRequired }
+                    (configuration, socket) = try await tailscale.prepareConnection(profile)
+                } else { configuration = try SSHBridgeConfiguration(profile: profile) }
+                guard epoch == token, !Task.isCancelled,
+                      UIApplication.shared.applicationState != .background else {
+                    socket?.close()
+                    throw SSHBridgeError.disconnected
+                }
                 let authentication = try configuration.authenticationMethod(secret: secret)
                 let connected = try await SSHOwnedClient.connect(configuration: configuration,
-                                                                 authentication: authentication, ownership: sockets)
+                    authentication: authentication, ownership: sockets, connectedSocket: try socket?.takeDescriptor())
                 guard epoch == token, !Task.isCancelled,
                       UIApplication.shared.applicationState != .background else {
                     try? await connected.close()

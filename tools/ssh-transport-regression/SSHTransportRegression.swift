@@ -44,7 +44,7 @@ struct SSHTransportRegression {
             var wrongPin = profile
             let otherKey = NIOSSHPrivateKey(ed25519Key: Curve25519.Signing.PrivateKey())
             wrongPin.hostPublicKey = String(openSSHPublicKey: otherKey.publicKey)
-            try await verifySSHFailure(profile: wrongPin, secret: "test-only-password") { $0 is InvalidHostKey }
+            try await verifySSHFailure(profile: wrongPin, secret: "test-only-password") { isHostIdentityMismatch($0) }
             print("PASS: mismatched host keys are rejected before authentication without crashing.")
             try await verifySSHLoginTeardown(profile: profile, group: group, serverSockets: serverSockets)
             print("PASS: closing owned sockets during stalled login terminates promptly.")
@@ -62,6 +62,9 @@ struct SSHTransportRegression {
             try await verifySSHConnection(profile: tailscale, secret: "unused-old-credential")
             print("PASS: keyless Tailscale SSH offers none, authenticates repeatedly, and never sends an old credential.")
             print("PASS: a verified Ed25519 host pin works when the server also advertises an ECDSA host key.")
+            try await verifySSHCoordinationKeys(port: keylessPort, hostKeys: [hostKey, ecdsaHostKey], sockets: serverSockets)
+            print("PASS: advertised host-key sets authenticate over an adopted userspace socketpair without a manual pin.")
+            print("PASS: automatic identity rejects wrong, malformed, missing and unsupported-only keys; legacy pins cannot be overridden.")
 
             var deniedUser = tailscale
             deniedUser.username = "not-allowed"
@@ -80,7 +83,7 @@ struct SSHTransportRegression {
 
             wrongPin.port = keylessPort
             wrongPin.authentication = "tailscale"
-            try await verifySSHFailure(profile: wrongPin) { $0 is InvalidHostKey }
+            try await verifySSHFailure(profile: wrongPin) { isHostIdentityMismatch($0) }
             var missingPin = tailscale
             missingPin.hostPublicKey = ""
             do {
@@ -103,6 +106,83 @@ struct SSHTransportRegression {
             try? await keylessServer?.close().get()
             try? await server.close().get()
             try? await group.shutdownGracefully()
+            throw error
+        }
+    }
+
+    private static func isHostIdentityMismatch(_ error: Error) -> Bool {
+        if case SSHBridgeError.hostIdentityMismatch = error { return true }
+        return false
+    }
+
+    private static func verifySSHCoordinationKeys(port: Int, hostKeys: [NIOSSHPrivateKey],
+                                                  sockets: SSHChannelOwnership) async throws {
+        // The DNS name intentionally cannot resolve through the OS; only the adopted socket reaches the fixture.
+        let profile = MachineProfile(name: "Automatic identity test", hostname: "fixture.tail-test.ts.net", username: "regression")
+        let advertised = hostKeys.map { String(openSSHPublicKey: $0.publicKey) }
+        let configuration = try SSHBridgeConfiguration(profile: profile, trustedHostKeys: advertised + ["ssh-rsa test-unsupported-only"])
+        guard configuration.hostKeys.count == 2 else { throw SSHRegressionFailure.failed("all supported advertised keys must be trusted") }
+        let ownership = SSHChannelOwnership(limit: 1)
+        defer { ownership.close() }
+        let descriptor = try await relayedSSHSocket(port: port, sockets: sockets)
+        let client = try await SSHOwnedClient.connect(configuration: configuration,
+            authentication: configuration.authenticationMethod(), ownership: ownership, connectedSocket: descriptor)
+        guard client.isConnected else { throw SSHRegressionFailure.failed("adopted Tailscale socket authentication") }
+        try await client.close()
+
+        let wrongKey = NIOSSHPrivateKey(ed25519Key: Curve25519.Signing.PrivateKey())
+        let incorrect = try SSHBridgeConfiguration(profile: profile, trustedHostKeys: [String(openSSHPublicKey: wrongKey.publicKey)])
+        let wrongOwnership = SSHChannelOwnership(limit: 1)
+        defer { wrongOwnership.close() }
+        let wrongDescriptor = try await relayedSSHSocket(port: port, sockets: sockets)
+        do {
+            _ = try await SSHOwnedClient.connect(configuration: incorrect,
+                authentication: incorrect.authenticationMethod(), ownership: wrongOwnership, connectedSocket: wrongDescriptor)
+            throw SSHRegressionFailure.failed("unadvertised server key was accepted")
+        } catch SSHBridgeError.hostIdentityMismatch {}
+        for keys in [[], ["ssh-rsa test-unsupported-only"]] {
+            do {
+                _ = try SSHBridgeConfiguration(profile: profile, trustedHostKeys: keys)
+                throw SSHRegressionFailure.failed("empty/unsupported coordination key set accepted")
+            } catch TailscaleIdentityError.missingHostKeys {}
+        }
+        do {
+            _ = try SSHBridgeConfiguration(profile: profile, trustedHostKeys: ["ssh-ed25519 malformed-key"])
+            throw SSHRegressionFailure.failed("malformed coordination key accepted")
+        } catch SSHBridgeError.invalidProfile(_) {}
+        var legacy = profile
+        legacy.authentication = "password"
+        do {
+            _ = try SSHBridgeConfiguration(profile: legacy, trustedHostKeys: advertised)
+            throw SSHRegressionFailure.failed("coordination keys overrode a legacy saved pin")
+        } catch SSHBridgeError.invalidProfile(_) {}
+    }
+
+    private static func relayedSSHSocket(port: Int, sockets: SSHChannelOwnership) async throws -> Int32 {
+        var pair: [Int32] = [-1, -1]
+        #if canImport(Darwin)
+        let stream = SOCK_STREAM
+        #else
+        let stream = Int32(SOCK_STREAM.rawValue)
+        #endif
+        guard socketpair(AF_UNIX, stream, 0, &pair) == 0 else { throw SSHRegressionFailure.failed("socketpair creation") }
+        // The return descriptor is raw until the production bootstrap consumes it.
+        do {
+            let bootstrap = ClientBootstrap(group: MultiThreadedEventLoopGroup.singleton)
+                .channelOption(ChannelOptions.autoRead, value: false)
+                .channelInitializer { channel in
+                    guard sockets.register(channel) else { return channel.eventLoop.makeFailedFuture(SSHBridgeError.disconnected) }
+                    return channel.eventLoop.makeSucceededVoidFuture()
+                }
+            let relay = try await bootstrap.withConnectedSocket(pair[1]).get()
+            let remote = try await bootstrap.connect(host: "127.0.0.1", port: port).get()
+            try await relay.pipeline.addHandler(SSHRegressionSocketRelay(peer: remote)).get()
+            try await remote.pipeline.addHandler(SSHRegressionSocketRelay(peer: relay)).get()
+            try await relay.setOption(ChannelOptions.autoRead, value: true).get()
+            try await remote.setOption(ChannelOptions.autoRead, value: true).get()
+            return pair[0]
+        } catch {
+            _ = close(pair[0])
             throw error
         }
     }
@@ -186,6 +266,24 @@ struct SSHTransportRegression {
         guard disconnected, Date().timeIntervalSince(started) < 3 else {
             throw SSHRegressionFailure.failed("socket teardown during login must fail promptly, not wait for authentication")
         }
+    }
+}
+
+/// Models libtailscale's byte relay without joining a real tailnet or resolving the fixture DNS name.
+private final class SSHRegressionSocketRelay: ChannelInboundHandler, @unchecked Sendable {
+    typealias InboundIn = ByteBuffer
+    private let peer: Channel
+    init(peer: Channel) { self.peer = peer }
+    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+        peer.writeAndFlush(unwrapInboundIn(data), promise: nil)
+    }
+    func channelInactive(context: ChannelHandlerContext) {
+        peer.close(promise: nil)
+        context.fireChannelInactive()
+    }
+    func errorCaught(context: ChannelHandlerContext, error: Error) {
+        peer.close(promise: nil)
+        context.close(promise: nil)
     }
 }
 

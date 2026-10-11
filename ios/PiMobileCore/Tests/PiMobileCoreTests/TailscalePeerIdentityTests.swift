@@ -55,6 +55,19 @@ final class TailscalePeerIdentityTests: XCTestCase {
         }
     }
 
+    func testMissingOrExpiredLocalIdentityCannotSupplyTrustedKeys() throws {
+        let status = """
+            {"BackendState":"Running","AuthURL":"","Peer":{}}
+            """
+        let decoded = try JSONDecoder().decode(TailscaleNodeStatus.self, from: Data(status.utf8))
+        XCTAssertThrowsError(try decoded.verifiedPeer(for: "work")) {
+            XCTAssertEqual($0 as? TailscaleIdentityError, .unavailable)
+        }
+        XCTAssertThrowsError(try decodeStatus(selfExpired: true).verifiedPeer(for: "work")) {
+            XCTAssertEqual($0 as? TailscaleIdentityError, .signInRequired)
+        }
+    }
+
     func testActualLowercaseKeyFieldAndLegacyStatusFieldDecode() throws {
         for field in ["sshHostKeys", "SSH_HostKeys"] {
             XCTAssertEqual(try decodeStatus(keyField: field).verifiedPeer(for: "work").hostPublicKeys,
@@ -75,14 +88,17 @@ final class TailscalePeerIdentityTests: XCTestCase {
 
     private func decodeStatus(state: String = "Running", dns: String = "work.tail-test.ts.net.",
                               keys: [String] = ["ssh-ed25519 test-only-key"], keyField: String = "sshHostKeys",
-                              expired: Bool = false, inNetworkMap: Bool = true, duplicate: Bool = false) throws -> TailscaleNodeStatus {
+                              expired: Bool = false, inNetworkMap: Bool = true, duplicate: Bool = false,
+                              selfExpired: Bool = false) throws -> TailscaleNodeStatus {
         let peer: [String: Any] = ["ID": "test-peer", "DNSName": dns, "HostName": "arbitrary-hostname",
                                   "TailscaleIPs": ["100.80.0.2", "fd7a:115c:a1e0::2"], keyField: keys,
                                   "Expired": expired, "InNetworkMap": inNetworkMap]
         var peers = ["nodekey:test-only": peer]
         if duplicate { peers["nodekey:duplicate-only"] = peer }
         let document: [String: Any] = ["BackendState": state, "AuthURL": "",
-            "CurrentTailnet": ["Name": "test-only", "MagicDNSSuffix": "tail-test.ts.net"], "Peer": peers]
+            "CurrentTailnet": ["Name": "test-only", "MagicDNSSuffix": "tail-test.ts.net"], "Peer": peers,
+            "Self": ["ID": "test-local", "DNSName": "pi-mobile.tail-test.ts.net.",
+                     "TailscaleIPs": ["100.80.0.1"], "Expired": selfExpired]]
         return try JSONDecoder().decode(TailscaleNodeStatus.self, from: JSONSerialization.data(withJSONObject: document))
     }
 }

@@ -34,13 +34,14 @@ final class SSHBridgeSessionTests: XCTestCase {
     }
 
     @MainActor
-    func testKeylessTailscaleStillRequiresAVerifiedHostPin() async {
+    func testKeylessTailscaleRequiresAuthenticatedNodeBeforeConnecting() async {
         let connection = SSHBridgeConnection()
-        let profile = MachineProfile(name: "Keyless test only", hostname: "127.0.0.1", username: "test")
+        let profile = MachineProfile(name: "Keyless test only", hostname: "127.0.0.1", username: "test",
+                                     hostPublicKey: "previously-copied-unverified-key")
         do {
             try await connection.connect(profile: profile)
-            XCTFail("Keyless login must never bypass host identity verification.")
-        } catch SSHBridgeError.invalidProfile(_) {
+            XCTFail("Keyless login must never bypass authenticated coordination data.")
+        } catch TailscaleIdentityError.signInRequired {
             XCTAssertEqual(connection.state, "failed")
             XCTAssertNil(connection.agent)
         } catch { XCTFail("Unexpected keyless profile error: \(error)") }

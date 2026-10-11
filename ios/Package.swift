@@ -19,6 +19,7 @@ let package = Package(
     products: [.library(name: "PiMobile", targets: ["PiMobile"])],
     dependencies: [
         .package(path: "PiMobileCore"),
+        .package(path: "TailscaleClient"),
         // Same pinned revision plus the checked-in existing-channel event-loop fix, on both build lanes.
         .package(path: ".patched-dependencies/Citadel"),
         // Prepared from the original pin plus the single checked-in manifest patch.
@@ -34,6 +35,7 @@ let package = Package(
             name: "PiMobile",
             dependencies: [
                 "PiMobileCore",
+                .product(name: "CTailscale", package: "TailscaleClient"),
                 .product(name: "Citadel", package: "Citadel"),
                 .product(name: "SwiftTerm", package: "SwiftTerm"),
                 .product(name: "FluidAudio", package: "FluidAudio"),

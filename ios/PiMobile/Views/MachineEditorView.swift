@@ -1,11 +1,12 @@
 import SwiftUI
 import PiMobileCore
 
-/// New machines use keyless Tailscale SSH; every connection still requires a verified public host identity.
+/// Tailscale SSH setup obtains host identity automatically; legacy pins and credentials are preserved.
 struct MachineEditorView: View {
     let profile: MachineProfile?
     @EnvironmentObject private var machines: MachineStore
     @EnvironmentObject private var sessions: MobileSessionHub
+    @EnvironmentObject private var tailscale: TailscaleService
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
     @State private var hostname = ""
@@ -18,6 +19,9 @@ struct MachineEditorView: View {
     @State private var error: String?
     @State private var confirmRemove = false
     @State private var machineId = UUID()
+    @State private var loaded = false
+    @State private var saving = false
+    @State private var saveTask: Task<Void, Never>?
 
     var body: some View {
         NavigationStack {
@@ -33,10 +37,12 @@ struct MachineEditorView: View {
                     }
                 } header: { Text("Machine") } footer: {
                     if useTailscaleSSH {
-                        Text("Tailscale SSH handles login on port 22. No private key or password. The host must allow this username without an interactive sign-in check.")
+                        Text("Tailscale verifies this machine's host keys automatically. SSH uses port 22 with no private key or password. The host must allow this username without an interactive SSH check.")
                     }
                 }
-                if !useTailscaleSSH {
+                if useTailscaleSSH {
+                    TailscaleAccountSection()
+                } else {
                     Section {
                         Button("Switch to Tailscale SSH", systemImage: "network") {
                             useTailscaleSSH = true
@@ -46,18 +52,16 @@ struct MachineEditorView: View {
                         }
                         .mobileGlassButtonStyle().buttonBorderShape(.capsule).frame(minHeight: 44)
                     } footer: {
-                        Text("This machine keeps its saved SSH login. Switching requires Tailscale SSH on the host and its verified public host key. Nothing changes until you save.")
+                        Text("Keeps the saved SSH login until you save. Switching verifies host keys through Pi Mobile's Tailscale connection; Cancel changes nothing.")
                     }
-                }
-                Section {
-                    TextEditor(text: $hostPublicKey)
-                        .font(.body.monospaced()).frame(minHeight: 110)
-                        .textInputAutocapitalization(.never).autocorrectionDisabled()
-                        .accessibilityLabel("Verified public host key")
-                } header: { Text(useTailscaleSSH ? "Tailscale host identity" : "Host identity") } footer: {
-                    Text(useTailscaleSSH
-                        ? "Paste the full public host key advertised by Tailscale, verified from a trusted device. This identifies the machine; it is not a private login key."
-                        : "Keep the verified public host key for this saved SSH connection. A network scan alone is not proof of identity.")
+                    Section {
+                        TextEditor(text: $hostPublicKey)
+                            .font(.body.monospaced()).frame(minHeight: 110)
+                            .textInputAutocapitalization(.never).autocorrectionDisabled()
+                            .accessibilityLabel("Verified public host key")
+                    } header: { Text("Saved host identity") } footer: {
+                        Text("Keep the verified public host key for this legacy SSH connection. A network scan alone is not proof of identity.")
+                    }
                 }
                 Section {
                     DisclosureGroup("Host bridge") {
@@ -69,6 +73,7 @@ struct MachineEditorView: View {
                 } footer: {
                     Text("Install the host bridge first. Change these settings only if its session or location differs from the defaults.")
                 }
+                if saving { Section { ProgressView("Verifying host identity…") } }
                 if let error { Section { Text(error).foregroundStyle(.red) } }
                 if profile != nil {
                     Section {
@@ -77,23 +82,28 @@ struct MachineEditorView: View {
                     } footer: { Text("Removes this connection and any saved login credential. Host sessions keep running.") }
                 }
             }
+            .disabled(saving)
             .navigationTitle(profile == nil ? "Add machine" : "Edit machine")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }.mobileGlassHeaderControl()
+                    Button("Cancel") { saveTask?.cancel(); dismiss() }.mobileGlassHeaderControl()
                 }.mobileGlassHeaderItem()
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") { saveMachine() }.mobileGlassHeaderControl(prominent: true)
+                    Button("Save") { saveTask = Task { await saveMachine() } }
+                        .mobileGlassHeaderControl(prominent: true).disabled(saving)
                 }.mobileGlassHeaderItem()
             }
             .onAppear {
+                guard !loaded else { return }
+                loaded = true
                 guard let profile else { return }
                 machineId = profile.id; name = profile.name; hostname = profile.hostname
                 port = String(profile.port); username = profile.username; herdrSession = profile.herdrSession
                 bridgePath = profile.bridgePath; hostPublicKey = profile.hostPublicKey
                 useTailscaleSSH = !profile.requiresSSHCredential
             }
+            .onDisappear { saveTask?.cancel() }
             .confirmationDialog("Remove this machine from Pi Mobile?", isPresented: $confirmRemove, titleVisibility: .visible) {
                 Button("Remove machine", role: .destructive) {
                     guard let profile else { return }
@@ -107,7 +117,11 @@ struct MachineEditorView: View {
         }
     }
 
-    private func saveMachine() {
+    private func saveMachine() async {
+        guard !saving else { return }
+        saving = true
+        error = nil
+        defer { saving = false }
         do {
             let address = hostname.trimmingCharacters(in: .whitespacesAndNewlines)
             let displayName = name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -122,13 +136,16 @@ struct MachineEditorView: View {
                 username: account, herdrSession: herdrSession, bridgePath: bridgePath,
                 hostPublicKey: hostPublicKey.trimmingCharacters(in: .whitespacesAndNewlines),
                 authentication: useTailscaleSSH ? "tailscale" : (profile?.authentication ?? "tailscale"))
-            // Validate the actual transport settings, including the parsed public key, before persisting.
-            _ = try SSHBridgeConfiguration(profile: updated)
+            if useTailscaleSSH { try await tailscale.validateProfile(updated) }
+            else { _ = try SSHBridgeConfiguration(profile: updated) }
+            // Cancel, backgrounding or a failed trusted lookup cannot persist a partial migration.
+            try Task.checkCancellation()
             try machines.saveMachine(updated)
             sessions.forgetMachine(machineId)
             dismiss()
             Task { await sessions.refreshMachine(updated) }
-        } catch { self.error = error.localizedDescription }
+        } catch is CancellationError { /* Cancel never alters the saved machine. */ }
+        catch { self.error = error.localizedDescription }
     }
 }
 

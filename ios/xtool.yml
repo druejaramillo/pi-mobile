@@ -5,4 +5,5 @@ infoPath: .xtool-support/Info.plist
 iconPath: PiMobile/Assets.xcassets/AppIcon.appiconset/AppIcon.png
 resources:
   - PiMobile/Resources/voxtype-profile.json
+  - PiMobile/Resources/tailscale-license.txt
 skipLSP: true

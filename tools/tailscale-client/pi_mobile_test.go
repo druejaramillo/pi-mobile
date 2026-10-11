@@ -8,6 +8,13 @@ import (
 	"time"
 )
 
+func TestPiTailscaleMissingNodeFailsClosed(t *testing.T) {
+	if PiTailscaleStatus(-1) != nil || PiTailscaleLogin(-1) != -1 || PiTailscaleDial(-1, nil) != -1 {
+		t.Fatal("missing nodes must not return status, start a login, or dial through another identity")
+	}
+	PiTailscaleClose(-1) // Idempotent teardown of an already closed node.
+}
+
 func TestPiTailscaleSocketRelayAndClose(t *testing.T) {
 	remote, relay := net.Pipe()
 	t.Cleanup(func() { remote.Close() })

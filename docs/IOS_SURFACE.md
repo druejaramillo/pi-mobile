@@ -29,13 +29,19 @@ The user requested native Liquid Glass, a prettier interface and a more magical 
 - Keep motion brief and state-driven. Honor Reduce Motion, Reduce Transparency and increased contrast. Never animate streaming text or add ambient effect loops.
 - Preserve cached/offline visibility, exact pane destinations, terminal control/takeover confirmations, permission action labels, grant widths and every host-owned decision.
 
-## Keyless machine setup simplification
+## Automatic Tailscale host identity
+
+The approved follow-up adds one in-app sign-in and a separate **pi-mobile** tailnet device. This is a narrow extension of the existing native Operate form/settings system, not a new visual identity. The machine form now asks only name, Tailscale destination and host username; it removes the public-key editor for Tailscale profiles and validates the exact peer's advertised keys before Save. Legacy SSH keeps its existing pin editor and explicit migration/cancel behavior.
+
+A shared native Tailscale section shows connection/tailnet state, a 44pt glass sign-in action, explicit connection check, bounded loading and recoverable errors. Each visible section owns its own in-app Safari sheet so Settings and Add machine cannot both present the same login. Safari owns browser navigation and Done; node status is checked on dismissal. System typography, semantic colors, safe areas and glass fallbacks are inherited unchanged. No screenshots exist; inline finish-review disposition is **recapture**, with no visual approval. Source documentation preserves the incumbent system; pre-existing sidecar drift is not repaired as part of this feature.
+
+## Keyless machine setup simplification (historical, manual key entry superseded)
 
 Machine setup now serves only the new Tailscale SSH path: name, Tailscale address, host username and **verified public host identity**, with port 22 automatic. Private-key import/paste, passwords, passphrases and the authentication picker are removed. The public identity key stays because the app cannot read the system Tailscale app's coordination data; it is not a private login credential. Host bridge session/path defaults move under a native disclosure.
 
 Existing saved SSH logins remain unchanged. Their editor offers a deliberate **Switch to Tailscale SSH** action, which clears the draft pin and requires the verified Tailscale-advertised key before Save. Cancel retains saved state; legacy Keychain items are not erased by migration. Switch/remove keep minimum 44pt native glass controls; the system form, semantic type/colors and navigation remain unchanged. Tailscale SSH must be enabled and allowed by an `accept` rule; interactive `check` sign-in is unsupported.
 
-This form compiles in the real arm64 app (`ios/TestResults/xtool-build-20261011T090542Z.log`). Sixteen Core tests and the keyless/legacy loopback transport regression pass. The simplified build (`440e66d`) was subsequently signed and successfully installed in place over USB after explicit user authorization (`ios/TestResults/deploy-keyless-tailscale-20261011T090750Z.log`). No uninstall or data reset was performed. No launch verification or native screenshots exist for the simplified form; native finish disposition is **recapture**, not visual approval. See [the keyless checklist](TESTING.md#tailscale-ssh-setup--required-native-verification).
+The earlier manual-key form compiled in the real arm64 app (`ios/TestResults/xtool-build-20261011T090542Z.log`). Sixteen Core tests and the keyless/legacy loopback transport regression pass. The simplified build (`440e66d`) was subsequently signed and successfully installed in place over USB after explicit user authorization (`ios/TestResults/deploy-keyless-tailscale-20261011T090750Z.log`). No uninstall or data reset was performed. No launch verification or native screenshots exist for the simplified form; native finish disposition is **recapture**, not visual approval. See [the keyless checklist](TESTING.md#tailscale-ssh-setup--required-native-verification).
 
 ## Verification state (Liquid Glass checkpoint)
 

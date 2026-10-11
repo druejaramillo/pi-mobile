@@ -8,7 +8,7 @@ ios
 
 ## Stack
 
-Native SwiftUI app, SwiftTerm terminal rendering, Citadel SSH over the user's always-available Tailscale network, FluidAudio/Core ML Parakeet TDT v3. Node.js host bridge and TypeScript Pi extension. XcodeGen produces the Xcode project on a Mac; a parallel SwiftPM/xtool build lane targets physical iPhones from Linux. These are implementation choices within the approved native build, not existing infrastructure.
+Native SwiftUI app, SwiftTerm terminal rendering, Citadel SSH through an embedded foreground-only Tailscale userspace node (legacy SSH retains the existing VPN route), FluidAudio/Core ML Parakeet TDT v3. Node.js host bridge and TypeScript Pi extension. XcodeGen produces the Xcode project on a Mac; a parallel SwiftPM/xtool build lane targets physical iPhones from Linux. These are implementation choices within the approved native build, not existing infrastructure.
 
 ## Users
 
@@ -27,7 +27,7 @@ Herdr owns terminal processes and topology. Pi owns each conversation, commands,
 - Native iOS controls and navigation, one pane at a time.
 - A first-class global Agents screen lists recognized running agents across every configured machine with status and machine/workspace/tab context. Tapping an agent goes directly to its native conversation or terminal. Unreachable machines and cached/stale state remain explicit; an offline machine must not look empty.
 - Direct SSH connections; no central terminal gateway or public HTTP service.
-- Keyless Tailscale SSH for new machines, explicit public host-identity verification. No private-key/password/passphrase setup. Existing saved SSH logins retain device-only Keychain compatibility; migration is explicit. Interactive Tailscale SSH check-mode sign-in is not implemented.
+- Keyless Tailscale SSH for new machines, in-app sign-in as a separate pi-mobile tailnet device, automatic public host-identity verification from authenticated coordination data. No private-key/password/passphrase setup. Existing saved SSH logins retain device-only Keychain compatibility; migration is explicit. Interactive Tailscale SSH check-mode sign-in is not implemented.
 - A native conversation surface backed by the same live Pi process; unsupported custom interfaces remain accessible in the terminal.
 - Permission requests must retain the existing policy, grant widths, confirmation steps and audit trail. No automatic approvals.
 - Actual Plannotator web pages inside the app, forwarded through SSH; return to the originating pane.
@@ -38,7 +38,7 @@ Herdr owns terminal processes and topology. Pi owns each conversation, commands,
 
 ## Evidence on Hand
 
-Inspected local Herdr 0.9.1 terminal stream/API schema, Pi 1.1.0 extension API, pi-permission-system 40.1.3 dialog implementation and local Plannotator metadata publisher. VoxType configuration was inspected read-only. The platform-neutral Core package compiles and passes seven XCTest methods on Linux with Swift 6.4. The Linux xtool lane compiles, links and packages an unsigned arm64 iPhone app with the user-supplied Apple SDK; repeated builds pass. The signed app was installed successfully over USB on an iPhone running iOS 26.6.2. App launch and iPhone runtime verification remain outstanding.
+Inspected local Herdr 0.9.1 terminal stream/API schema, Pi 1.1.0 extension API, pi-permission-system 40.1.3 dialog implementation and local Plannotator metadata publisher. VoxType configuration was inspected read-only. The platform-neutral Core package compiles and passes twenty-six XCTest methods on Linux with Swift 6.4. Two embedded Tailscale Go/C boundary tests pass under the race detector, along with the actual SSH socket-adoption/identity regression. The Linux xtool lane compiles, links and packages an unsigned arm64 iPhone app with the user-supplied Apple SDK; repeated builds pass. The signed app was installed successfully over USB on an iPhone running iOS 26.6.2. App launch and iPhone runtime verification remain outstanding.
 
 ## Product Principles
 

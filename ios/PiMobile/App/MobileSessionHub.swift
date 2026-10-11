@@ -13,10 +13,11 @@ final class MobileSessionHub: ObservableObject {
     private var cachedTopologies: [UUID: HerdrTopology] = [:]
     private var refreshGeneration = UUID()
     let drafts = PaneDraftStore()
+    let tailscale = TailscaleService()
 
     func connection(for machineId: UUID) -> SSHBridgeConnection {
         if let connection = connections[machineId] { return connection }
-        let connection = SSHBridgeConnection()
+        let connection = SSHBridgeConnection(tailscale: tailscale)
         connections[machineId] = connection
         subscriptions[machineId] = connection.objectWillChange.sink { [weak self] _ in
             // Child @Published changes become visible after objectWillChange's pre-change callback.

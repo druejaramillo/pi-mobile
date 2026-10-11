@@ -6,8 +6,9 @@ import NIOSSH
 /// Raw TCP socket ownership precedes authentication; Citadel's existing-channel API does not await login.
 struct SSHOwnedClient {
     static func connect(configuration: SSHBridgeConfiguration, authentication: SSHAuthenticationMethod,
-                        ownership: SSHChannelOwnership) async throws -> SSHClient {
-        let channel = try await ClientBootstrap(group: MultiThreadedEventLoopGroup.singleton)
+                        ownership: SSHChannelOwnership, connectedSocket: CInt? = nil) async throws -> SSHClient {
+        // A userspace Tailscale dial supplies a connected socketpair; NIO owns it from this boundary.
+        let bootstrap = ClientBootstrap(group: MultiThreadedEventLoopGroup.singleton)
             .connectTimeout(.seconds(15))
             .channelOption(ChannelOptions.autoRead, value: false)
             .channelInitializer { channel in
@@ -16,11 +17,16 @@ struct SSHOwnedClient {
                 }
                 return channel.eventLoop.makeSucceededVoidFuture()
             }
-            .connect(host: configuration.profile.hostname, port: configuration.profile.port).get()
+        let channel: Channel
+        if let connectedSocket {
+            channel = try await bootstrap.withConnectedSocket(connectedSocket).get()
+        } else {
+            channel = try await bootstrap.connect(host: configuration.profile.hostname, port: configuration.profile.port).get()
+        }
         do {
             // The existing-channel API leaves reconnect at SSHConnectionPoolSettings' default .never.
             let client = try await SSHClient.connect(on: channel, authenticationMethod: authentication,
-                                                      hostKeyValidator: .trustedKeys([configuration.hostKey]))
+                                                      hostKeyValidator: .trustedKeys(configuration.hostKeys))
             let authenticated = channel.eventLoop.makePromise(of: Void.self)
             let readiness = SSHAuthenticationReadiness(authenticated: authenticated)
             try await channel.eventLoop.submit {
@@ -41,6 +47,7 @@ struct SSHOwnedClient {
             return client
         } catch {
             channel.close(promise: nil)
+            if error is InvalidHostKey { throw SSHBridgeError.hostIdentityMismatch }
             // Citadel consumes its custom delegate after one offer, then emits this generic failure.
             if configuration.profile.authentication == "tailscale",
                case SSHClientError.allAuthenticationOptionsFailed = error {

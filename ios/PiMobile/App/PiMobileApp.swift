@@ -12,15 +12,20 @@ struct PiMobileApp: App {
             MobileRootView()
                 .environmentObject(machines)
                 .environmentObject(sessions)
+                .environmentObject(sessions.tailscale)
                 .environmentObject(dictation)
                 .tint(.blue)
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .background {
                         dictation.cancelRecording()
                         sessions.suspendConnections()
+                        Task { await sessions.tailscale.suspend() }
                     } else if phase == .active {
                         // Foreground reads only. Pending prompts/approval actions are never retried.
-                        Task { await sessions.refreshAll(machines.machines) }
+                        Task {
+                            await sessions.tailscale.resume()
+                            await sessions.refreshAll(machines.machines)
+                        }
                     }
                 }
         }

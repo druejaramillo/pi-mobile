@@ -21,6 +21,7 @@ else
   exit 2
 fi
 "$root/tools/prepare-ssh-dependency.sh"
+"$root/tools/prepare-tailscale-client.sh" iphonesimulator
 cd "$root/ios"
 xcodegen generate --spec project.yml
 xcodebuild -project PiMobile.xcodeproj -scheme PiMobile \

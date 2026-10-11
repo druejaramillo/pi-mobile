@@ -12,7 +12,7 @@ The supplied research checkout is older than the installed binary and lacks the 
 
 ## Enable keyless Tailscale SSH
 
-Tailscale must be connected on the iPhone and host. **Tailscale networking and Tailscale SSH are different:** new Pi Mobile connections use SSH's `none` authentication, with identity and authorization enforced by Tailscale. No client private key, password or passphrase is needed.
+Tailscale must be connected on the host. Sign in inside **Pi Mobile → Settings → Tailscale** on the iPhone; the app registers a separate **pi-mobile** tailnet device, without changing the installed VPN app. **Tailscale networking and Tailscale SSH are different:** new Pi Mobile connections use SSH's `none` authentication, with identity and authorization enforced by Tailscale. No client private key, password or passphrase is needed.
 
 On the deliberately chosen host, enable Tailscale SSH yourself:
 
@@ -22,7 +22,7 @@ sudo tailscale set --ssh
 
 This takes over port **22 on the host's Tailscale address only** and can interrupt existing SSH connections to that address. Review the change from a local console or another trusted access path. The app never runs this command or changes Tailscale settings.
 
-Your tailnet policy must permit both network access to the destination's port 22 and SSH access for the phone's identity to an **existing host username**. Pi Mobile currently supports SSH `accept` rules, not interactive browser sign-in for `check` rules. Do not disable checks broadly to make the app work: review and deliberately choose the narrow access you want. Matching `check` rules take precedence over `accept`; merely adding an `accept` rule will not override them. A narrowly scoped SSH-policy excerpt for your own devices is:
+Your tailnet policy must permit both network access to the destination's port 22 and SSH access for Pi Mobile's own tailnet identity to an **existing host username**. Pi Mobile currently supports SSH `accept` rules, not interactive browser sign-in for `check` rules. Do not disable checks broadly to make the app work: review and deliberately choose the narrow access you want. Matching `check` rules take precedence over `accept`; merely adding an `accept` rule will not override them. A narrowly scoped SSH-policy excerpt for your own devices is:
 
 ```json
 "ssh": [
@@ -37,25 +37,17 @@ Your tailnet policy must permit both network access to the destination's port 22
 
 Substitute your actual identity/account and merge deliberately into your existing policy; this is not a replacement tailnet policy or a network-access grant. See [Tailscale SSH prerequisites, rules and platform limitations](https://tailscale.com/docs/features/tailscale-ssh). Linux is supported; macOS servers require the open-source `tailscaled` variant, not the App Store client.
 
-### Verify the public host identity
+### Automatic public host identity verification
 
-Tailscale SSH needs **no user SSH keypair**. A file such as `~/.ssh/id_ed25519.pub` is normally a user-login public key, not the server's host identity; pasting it into the app causes `Citadel.InvalidHostKey`. Login credentials and server identity are different.
+Tailscale SSH needs **no user SSH keypair**. A file such as `~/.ssh/id_ed25519.pub` is normally a user-login public key, not the server's host identity. No public-key copying is needed for Pi Mobile's Tailscale connections.
 
-Tailscale distributes the server's public host keys, and the `tailscale ssh` CLI verifies them automatically against coordination data. Pi Mobile does not yet integrate that trusted lookup: the manual public-host-key field is a limitation of this app, not a requirement to manage your own keys for Tailscale SSH. It cannot safely treat an arbitrary scanned key as trusted.
+Sign in to the same tailnet inside Pi Mobile. Complete browser sign-in, tap Done, and use **Check Tailscale connection** if device approval is still pending. This authorizes the app's separate **pi-mobile** node, not the installed VPN app's node. The tailnet policy must allow this identity to reach the destination and requested host username; the app never changes policy itself.
 
-From **another** trusted, authenticated Tailscale device—not the destination host itself—copy the destination's advertised Ed25519 public host key:
+Enter only the display name, exact Tailscale MagicDNS name/IP and host username. Short MagicDNS names are accepted within the signed-in tailnet's DNS suffix. Port 22 is automatic. **Host bridge** reveals the existing session/path defaults only if they need changing. Install the bridge separately below; opening a connection never installs it.
 
-```sh
-tailscale status --json | jq -r --arg host 'your-host.your-tailnet.ts.net.' \
-  '.Peer[] | select(.DNSName == $host) |
-   (.sshHostKeys // .SSH_HostKeys // [])[] | select(startswith("ssh-ed25519 "))'
-```
+Pi Mobile retrieves the exact peer's advertised host keys from its authenticated coordination data and connects through that same userspace node. All supported advertised Ed25519/ECDSA keys are parsed and checked against the actual server. Missing, ambiguous, expired, malformed or mismatched identity fails closed. No scanned key or guessed system host key is trusted. See [embedded client](TAILSCALE_CLIENT.md) for source pins, ownership and verification limits.
 
-Use the exact destination MagicDNS FQDN, including the final dot. `jq` is needed only for this copy command. The field fallback accommodates Tailscale CLI versions. Copy the complete `ssh-ed25519 …` line into **Tailscale host identity** on the phone. If no key appears, check the destination name, SSH enablement and policy; never bypass verification or replace this with an unverified network scan. Tailscale can reuse a system host key or advertise a different one—use the key advertised for this node, not a guessed `/etc/ssh` file.
-
-In Pi Mobile, enter the name, Tailscale DNS name/IP and host username. Port 22 is fixed for this setup. **Host bridge** reveals the existing session/path defaults only if they need changing. Install the bridge separately below; opening a connection never installs it.
-
-Existing saved SSH profiles remain unchanged on upgrade. Their editor offers **Switch to Tailscale SSH**, which clears the draft host pin and requires the verified Tailscale-advertised public key. Save changes the connection mode; Cancel leaves the saved profile and credential untouched. Old Keychain items are retained on migration and removed only when you remove the saved machine.
+Existing saved fields and Keychain credentials are not reset. Saved Tailscale profiles use automatic coordination keys rather than their old copied pin, without rewriting that stored field. Legacy SSH profiles keep using their saved pin/credential until **Switch to Tailscale SSH** is explicitly chosen and saved. Switching validates automatic lookup before persistence; Cancel changes nothing. Old Keychain items are retained on migration and removed only when you remove the saved machine.
 
 ## Install deliberately (not performed by this implementation)
 

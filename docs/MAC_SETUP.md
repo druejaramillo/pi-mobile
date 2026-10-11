@@ -5,7 +5,8 @@
 - **Xcode 26 or newer with Swift 6.2+** (required by pinned SwiftTerm); app language mode is Swift 5.
 - iPhone running iOS 17 or newer. Physical-device Parakeet inference is a required verification step, not proven by the platform minimum.
 - XcodeGen installed on the Mac (`brew install xcodegen` if you choose Homebrew).
-- Tailscale connected on the iPhone and each host.
+- Go 1.27.1+ (normal Go toolchain auto-download is supported); the build compiles pinned libtailscale source.
+- Tailscale connected on each host; sign in separately inside Pi Mobile.
 
 ## Pull and compile
 
@@ -15,7 +16,7 @@ cd pi-mobile
 ./tools/build-ios.sh
 ```
 
-This generates `ios/PiMobile.xcodeproj`, resolves pinned library revisions and builds an unsigned Simulator target. The script neither installs tools nor changes provisioning. Open the generated project in Xcode, select your development team in Signing & Capabilities, connect your iPhone, choose it as destination and Run. The default bundle id is `com.druejaramillo.pi-mobile`; change it locally if your team requires another id. No Push Notifications or background modes are needed.
+This generates `ios/PiMobile.xcodeproj`, resolves pinned library revisions and builds an unsigned Simulator target. The script downloads verified Go modules/toolchain as needed but neither installs global tools nor changes provisioning. Before switching from Simulator to a physical iPhone, run `./tools/prepare-tailscale-client.sh iphoneos`; the local static archive is destination-specific. Open the generated project in Xcode, select your development team in Signing & Capabilities, connect your iPhone, choose it as destination and Run. The default bundle id is `com.druejaramillo.pi-mobile`; change it locally if your team requires another id. No Push Notifications or background modes are needed.
 
 To get subsequent checkpoints:
 
@@ -33,15 +34,15 @@ xcrun simctl list devices available
 ./tools/test-ios.sh 'platform=iOS Simulator,id=<chosen-UDID>'
 ```
 
-Choose a fresh Simulator with no saved machines. The script runs Core package tests plus the app-hosted session/dictation suite and saves `.xcresult` evidence under `ios/TestResults/`. Sixteen Core XCTest methods have compiled/passed on Linux; the nineteen app-hosted tests remain uncompiled/unrun. Successful SSH/audio/review paths still need the device checklist. A parallel [Linux xtool lane](LINUX_SETUP.md) is available for device builds after supplying Apple's SDK. See [TESTING.md](TESTING.md).
+Choose a fresh Simulator with no saved machines. The script runs Core package tests plus the app-hosted session/dictation suite and saves `.xcresult` evidence under `ios/TestResults/`. Twenty-six Core XCTest methods have compiled/passed on Linux; the nineteen app-hosted tests remain uncompiled/unrun. Successful SSH/audio/review paths still need the device checklist. A parallel [Linux xtool lane](LINUX_SETUP.md) is available for device builds after supplying Apple's SDK. See [TESTING.md](TESTING.md).
 
 ## Add machines
 
-Install the host bridge and explicitly enable **Tailscale SSH** following [HOST_SETUP.md](HOST_SETUP.md#enable-keyless-tailscale-ssh). The host must permit the phone's tailnet identity and host username with an SSH `accept` rule. Interactive `check`-mode sign-in is not implemented; ordinary Tailscale networking alone does not provide keyless login.
+Install the host bridge and explicitly enable **Tailscale SSH** following [HOST_SETUP.md](HOST_SETUP.md#enable-keyless-tailscale-ssh). The host must permit Pi Mobile's own tailnet identity and host username with an SSH `accept` rule. Interactive `check`-mode sign-in is not implemented; ordinary Tailscale networking alone does not provide keyless login.
 
-Add each machine using its Tailscale DNS name/IP, host username and verified **public host identity key advertised by Tailscale**. The trusted copy command is in the host guide. This is a public server key, not a private login key; never trust `ssh-keyscan` alone or assume the system OpenSSH key matches. Port 22 is automatic. **Host bridge** reveals the Herdr session and bridge path only when defaults need changing. No private key, password, passphrase, import or credential-paste control remains.
+Sign in through **Settings → Tailscale** to register Pi Mobile's separate **pi-mobile** device. Complete the in-app browser flow and any deliberate device approval. Add each machine using only its exact Tailscale DNS name/IP and host username; the app verifies its advertised host keys automatically through the same node used for SSH. Port 22 is automatic. **Host bridge** reveals the Herdr session and bridge path only when defaults need changing. No public-key copying, private key, password, passphrase or administrative token is needed.
 
-Existing saved profiles keep their SSH mode and Keychain credentials until explicitly switched. **Switch to Tailscale SSH** clears only the draft host pin, requires the verified advertised key and takes effect on Save. Cancel preserves the old connection. Migration never erases the existing credential; removing the saved machine still removes its Keychain item.
+Existing saved profiles/Keychain items are preserved. Tailscale profiles use automatic coordination keys without rewriting old pins. Legacy SSH retains its saved pin/credential until **Switch to Tailscale SSH** is explicitly chosen; automatic lookup must validate before Save. Cancel preserves the old connection. Migration never erases the existing credential; removing the saved machine still removes its Keychain item.
 
 The global Agents tab is the launch screen. Refresh checks every configured machine independently. An offline host retains explicitly stale locations cached during this app process; the directory never treats an unreachable host as verified empty. Tap any agent to open its pane directly. Machines remains available for workspaces/tabs and ordinary shell panes.
 

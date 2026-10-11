@@ -45,7 +45,7 @@ public struct TailscaleNodeStatus: Decodable, Sendable {
         let matches = (peers ?? [:]).values.filter { peer in
             let dns = Self.normalizedName(peer.dnsName)
             return peer.addresses.contains(where: { $0.lowercased() == address }) || dns == address ||
-                (!address.contains("." ) && !address.contains(":") && !suffix.isEmpty && dns == "\(address).\(suffix)")
+                (!address.contains(".") && !address.contains(":") && !suffix.isEmpty && dns == "\(address).\(suffix)")
         }
         guard !matches.isEmpty else { throw TailscaleIdentityError.missingPeer }
         guard matches.count == 1, let peer = matches.first else { throw TailscaleIdentityError.ambiguousPeer }
@@ -62,7 +62,10 @@ public struct TailscaleNodeStatus: Decodable, Sendable {
         case "NeedsLogin": throw TailscaleIdentityError.signInRequired
         case "NeedsMachineAuth": throw TailscaleIdentityError.approvalRequired
         case "Running":
-            guard selfPeer?.expired != true else { throw TailscaleIdentityError.signInRequired }
+            guard let selfPeer, !selfPeer.id.isEmpty, !selfPeer.addresses.isEmpty else {
+                throw TailscaleIdentityError.unavailable
+            }
+            guard selfPeer.expired != true else { throw TailscaleIdentityError.signInRequired }
         default: throw TailscaleIdentityError.unavailable
         }
     }

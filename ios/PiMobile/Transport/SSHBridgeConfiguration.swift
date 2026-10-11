@@ -10,6 +10,7 @@ public enum SSHBridgeError: Error, LocalizedError {
     case invalidProfile(String)
     case invalidSecret
     case tailscaleSSHUnavailable
+    case hostIdentityMismatch
     case disconnected
     case requestDeadline
     case protocolViolation(String)
@@ -21,6 +22,7 @@ public enum SSHBridgeError: Error, LocalizedError {
         case .invalidProfile(let reason): return "SSH profile invalid: \(reason)"
         case .invalidSecret: return "Saved SSH credential invalid: switch this machine to Tailscale SSH after enabling it on the host."
         case .tailscaleSSHUnavailable: return "Tailscale SSH login failed: enable SSH on the host and allow this username with an accept rule in the tailnet policy. Interactive check-mode sign-in is not supported."
+        case .hostIdentityMismatch: return "SSH host identity mismatch: the server key does not match this machine's trusted identity. Check the destination and its Tailscale SSH setup; no connection was accepted."
         case .disconnected: return "SSH bridge disconnected: command delivery may be uncertain; refresh before acting again."
         case .requestDeadline: return "SSH bridge deadline exceeded: command delivery may be uncertain; do not replay it automatically."
         case .protocolViolation(let reason): return "SSH bridge protocol invalid: \(reason)"
@@ -33,10 +35,11 @@ public enum SSHBridgeError: Error, LocalizedError {
 /// Validated SSH settings keep user-supplied strings out of unquoted shell syntax.
 struct SSHBridgeConfiguration {
     let profile: MachineProfile
-    let hostKey: NIOSSHPublicKey
+    let hostKeys: Set<NIOSSHPublicKey>
     let command: String
 
-    init(profile: MachineProfile) throws {
+    /// Coordination keys are accepted only for Tailscale SSH; legacy profiles keep their exact saved pin.
+    init(profile: MachineProfile, trustedHostKeys: [String]? = nil) throws {
         guard (1...65535).contains(profile.port), !profile.hostname.isEmpty,
               profile.hostname.utf8.count <= 253,
               profile.hostname.unicodeScalars.allSatisfy({
@@ -48,17 +51,33 @@ struct SSHBridgeConfiguration {
               !profile.herdrSession.hasPrefix("-") else {
             throw SSHBridgeError.invalidProfile("hostname, port, username or Herdr session")
         }
-        let pin = profile.hostPublicKey.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard Self.isSafeArgument(pin, maximumBytes: 16384),
-              let algorithm = pin.split(separator: " ").first,
-              ["ssh-ed25519", "ecdsa-sha2-nistp256", "ecdsa-sha2-nistp384", "ecdsa-sha2-nistp521"].contains(String(algorithm)) else {
-            throw SSHBridgeError.invalidProfile("pin a full supported OpenSSH host public key, not a fingerprint or known_hosts line")
+        if let trustedHostKeys {
+            guard profile.authentication == "tailscale", profile.port == 22, trustedHostKeys.count <= 32 else {
+                throw SSHBridgeError.invalidProfile("coordination host keys require Tailscale SSH on port 22")
+            }
+            let supported = trustedHostKeys.filter { Self.supportedHostKey($0) }
+            guard !supported.isEmpty else { throw TailscaleIdentityError.missingHostKeys }
+            hostKeys = try Set(supported.map { try Self.parseHostKey($0) })
+        } else {
+            hostKeys = [try Self.parseHostKey(profile.hostPublicKey)]
         }
-        do { hostKey = try NIOSSHPublicKey(openSSHPublicKey: pin) }
-        catch { throw SSHBridgeError.invalidProfile("OpenSSH host public key cannot be parsed") }
         let path = try Self.bridgePathShellArgument(profile.bridgePath)
         command = "exec node \(path) --session \(Self.quoteShellArgument(profile.herdrSession))"
         self.profile = profile
+    }
+
+    private static func supportedHostKey(_ value: String) -> Bool {
+        guard let algorithm = value.trimmingCharacters(in: .whitespacesAndNewlines).split(separator: " ").first else { return false }
+        return ["ssh-ed25519", "ecdsa-sha2-nistp256", "ecdsa-sha2-nistp384", "ecdsa-sha2-nistp521"].contains(String(algorithm))
+    }
+
+    private static func parseHostKey(_ value: String) throws -> NIOSSHPublicKey {
+        let pin = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard isSafeArgument(pin, maximumBytes: 16384), supportedHostKey(pin) else {
+            throw SSHBridgeError.invalidProfile("a full supported OpenSSH host public key is required, not a fingerprint or known_hosts line")
+        }
+        do { return try NIOSSHPublicKey(openSSHPublicKey: pin) }
+        catch { throw SSHBridgeError.invalidProfile("OpenSSH host public key cannot be parsed") }
     }
 
     private static func isSafeArgument(_ value: String, maximumBytes: Int) -> Bool {

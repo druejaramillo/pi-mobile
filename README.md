@@ -24,7 +24,7 @@ The launch **Agents** tab indexes existing agents across your machines, with sta
 ./tools/build-ios-linux.sh
 ```
 
-Follow [Linux setup](docs/LINUX_SETUP.md) for the Apple-provided SDK, private toolchain, signing and explicit USB deployment. Sixteen Core XCTest methods pass on this Linux machine, and full/repeated unsigned app builds succeed. The signed app is **installed on an iPhone**, but launch/runtime verification remains outstanding. The Mac build remains available.
+Follow [Linux setup](docs/LINUX_SETUP.md) for the Apple-provided SDK, private toolchain, signing and explicit USB deployment. Twenty-six Core XCTest methods pass on this Linux machine, and full/repeated unsigned app builds succeed. The signed app is **installed on an iPhone**, but launch/runtime verification remains outstanding. The Mac build remains available.
 
 ## Layout
 
@@ -37,14 +37,14 @@ Follow [Linux setup](docs/LINUX_SETUP.md) for the Apple-provided SDK, private to
 
 New machines use [Tailscale SSH](https://tailscale.com/docs/features/tailscale-ssh) on port 22: no private key, password or passphrase setup. Enable Tailscale SSH on each host and allow the host username in your tailnet's SSH policy. Pi Mobile currently requires an `accept` rule; interactive `check`-mode sign-in is not supported. Tailscale networking alone does not enable Tailscale SSH.
 
-Add the machine's Tailscale name/IP, host username and **verified public host identity key**. That public key identifies the server; it is not a private login credential. Host bridge settings keep their defaults under a disclosure. See [host setup](docs/HOST_SETUP.md#enable-keyless-tailscale-ssh) for the trusted public-key copy command and policy prerequisites.
+Sign in inside **Settings → Tailscale** once, then add the machine's Tailscale name/IP and host username. Pi Mobile registers its own **pi-mobile** tailnet device and automatically verifies the destination's advertised host keys. No public-key copying or administrative token is needed. Host bridge settings keep their defaults under a disclosure. See [host setup](docs/HOST_SETUP.md#enable-keyless-tailscale-ssh) for policy prerequisites and the [embedded client](docs/TAILSCALE_CLIENT.md) for the trust/build boundary.
 
-Existing saved SSH logins and device-only Keychain items are preserved. Edit an old machine and explicitly choose **Switch to Tailscale SSH** to migrate; this clears the draft host pin and requires the verified key advertised by Tailscale before Save. Cancel changes nothing.
+Existing saved profiles and device-only Keychain items are preserved. Tailscale profiles now use coordination keys without rewriting old stored pins. Legacy SSH still uses its saved pin/credential until you explicitly choose **Switch to Tailscale SSH** and Save; automatic lookup must succeed first. Cancel changes nothing.
 
 ## Security boundaries
 
-SSH host keys are explicitly trusted; secrets belong in iOS Keychain, never Git. No public listener, cloud transcription or APNs. No automatic terminal takeover, approval, remote installation or host process restart. A phone disconnect stops only its own channels.
+SSH host keys come from authenticated Tailscale coordination data, or an existing legacy pin—never an unverified network scan. Legacy SSH secrets stay in device-only Keychain; embedded Tailscale login state uses protected, backup-excluded app storage. Neither belongs in Git. No public listener, cloud transcription or APNs. No automatic terminal takeover, approval, remote installation or host process restart. A phone disconnect stops only its own channels.
 
 ## Current verification
 
-**23 host protocol tests pass**, alongside TypeScript/JavaScript and importer checks. Sixteen Core XCTest methods compile and pass on Linux; nineteen app-hosted XCTest methods remain uncompiled/unrun; [testing instructions](docs/TESTING.md) describe exact coverage and limits. See [build status](docs/BUILD_STATUS.md) for exact checks, compatibility boundaries and unresolved gates. The Linux iOS compile/link/package pass is verified; Mac/Xcode validation and a physical iPhone pass remain required before calling this usable on-device. Compilation is not runtime proof.
+**23 host protocol tests pass**, alongside TypeScript/JavaScript and importer checks. Twenty-six Core XCTest methods compile and pass on Linux; nineteen app-hosted XCTest methods remain uncompiled/unrun; [testing instructions](docs/TESTING.md) describe exact coverage and limits. See [build status](docs/BUILD_STATUS.md) for exact checks, compatibility boundaries and unresolved gates. The Linux iOS compile/link/package pass is verified; Mac/Xcode validation and a physical iPhone pass remain required before calling this usable on-device. Compilation is not runtime proof.

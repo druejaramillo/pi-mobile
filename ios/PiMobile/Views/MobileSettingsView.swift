@@ -16,6 +16,7 @@ struct MobileSettingsView: View {
 
     var body: some View {
         Form {
+            TailscaleAccountSection()
             Section {
                 LabeledContent("Engine", value: "Parakeet TDT v3")
                 LabeledContent("State", value: dictationStateTitle)
