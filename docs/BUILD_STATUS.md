@@ -12,7 +12,8 @@ Native iPhone app, direct SSH over Tailscale, existing Herdr/Pi sessions, global
 
 1. Protocol/product scaffold: committed and pushed (`c2e6c3c`).
 2. Native UI/session navigation scaffold: committed and pushed (`55f681d`).
-3. Host and native integration: authored with pinned dependencies, setup documentation and static checks below.
+3. Host and native integration: committed and pushed (`93ae84e`) with pinned dependencies and setup documentation.
+4. Approved-boundary test suite: 23 host tests passing; 25 native XCTest methods authored with a Simulator runner, still uncompiled/unrun.
 
 ## Implemented in source
 
@@ -27,10 +28,11 @@ Native iPhone app, direct SSH over Tailscale, existing Herdr/Pi sessions, global
 
 ## Checks performed
 
-- Strict TypeScript/checkJs against installed Pi 1.1.0 declarations: passed (`host/check-host.mjs` and project `code_check`).
+- Host protocol suite: **23 tests passed** on Node 24.20.0 against the real CLI/extension and isolated external Pi/Herdr peers. No live sessions or model calls. See [TESTING.md](TESTING.md) for coverage and limits.
+- Strict TypeScript/checkJs against installed Pi 1.1.0 declarations, including test clients: passed (`host/check-host.mjs` and project `code_check`).
 - All authored `.mjs` files: `node --check` passed.
 - Python importer: Ruff lint and Python grammar passed. JSON/profile structure was checked; no credentials or desktop scripts were exported.
-- Swift tree-sitter scan: 25 files, no findings other than two known empty-Void-tuple parser limitations at NIO `succeed(())` calls. **This is not a Swift compiler/typecheck.**
+- Swift tree-sitter scan: 29 files, no findings other than two known empty-Void-tuple parser limitations at NIO `succeed(())` calls. **This is not a Swift compiler/typecheck.**
 - Info.plist, XcodeGen YAML and asset/profile JSON: parsed.
 - Build shell grammar and diff whitespace checks: passed. Build script refused Linux with exit 2 and a Mac prerequisite message.
 - Swift lint/typecheck/LSP: unavailable in this harness, not a clean result. JS lint and Python typechecking have no configured lane.
@@ -42,6 +44,6 @@ Native iPhone app, direct SSH over Tailscale, existing Herdr/Pi sessions, global
 - Terminal history is capped at 8 MiB. Its copying runs on MainActor; Citadel's upstream output stream is unbounded. Device throughput/backpressure remains a known verification gap.
 - Real SSH authentication, host-key rejection, terminal contention/resizing, WebKit ATS/assets/WebSockets, cancellation, model cache, microphone routes, five-minute delivery, memory/thermals and privacy instrumentation have not been exercised.
 - Native visual inspection and independent finish review are blocked on Mac screenshots. [DESIGN.md](../DESIGN.md) records a source baseline, not visual proof.
-- Public test seams (bridge protocol and native session/dictation interfaces, including cumulative terminal history) await user approval. **No tests have been authored or run.**
+- Public test interfaces are approved. Seven Core and eighteen app XCTest methods are authored, **not compiled or run**. Connected native transport, cumulative history, real permissions and successful audio/inference paths remain outside automated proof.
 
 No global Pi, Herdr, SSH, Tailscale or VoxType settings were changed; no host installation, live-session restart, model download or paid inference was performed. Follow [MAC_SETUP.md](MAC_SETUP.md) and record real results here before daily use.

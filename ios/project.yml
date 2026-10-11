@@ -59,6 +59,20 @@ targets:
         INFOPLIST_FILE: PiMobile/Info.plist
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     scheme:
+      testTargets:
+        - PiMobileTests
       gatherCoverageData: false
       environmentVariables:
         OS_ACTIVITY_MODE: default
+  PiMobileTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: PiMobileTests
+    dependencies:
+      - target: PiMobile
+      - package: PiMobileCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.druejaramillo.pi-mobile.tests
+        GENERATE_INFOPLIST_FILE: YES

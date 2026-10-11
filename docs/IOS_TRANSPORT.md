@@ -1,6 +1,6 @@
 # iOS direct SSH transport
 
-Direct SSH, terminal and review modules are integrated with the native app and shared models. Their source-checked dependencies are declared in `ios/project.yml`. No tests were authored: public-seam approval is still required. This Linux host has **no Swift compiler or Xcode**. These files have not been compiled or exercised on an iPhone.
+Direct SSH, terminal and review modules are integrated with the native app and shared models. Their source-checked dependencies are declared in `ios/project.yml`. Public-boundary tests are approved; native guard tests are authored but unrun, and the host protocol suite passes. See [TESTING.md](TESTING.md). This Linux host has **no Swift compiler or Xcode**. These files have not been compiled or exercised on an iPhone.
 
 ## Public coordinator seam
 
@@ -99,6 +99,6 @@ A WKContentRuleList blocks other resource origins and loading fails closed if co
 - Source-checked the Citadel and SwiftTerm APIs above, plus NIOSSH 0.3.4 public-key/auth/channel declarations and Herdr incremental rendering.
 - Static scans found no permissive host validator, PTY API, arbitrary-loads setting, removed `getTerminal()` call, or arbitrary direct-tcpip target.
 - `code_check` reported **SKIPPED: no .swift mapping**; `code_lsp` reported **no .swift mapping**. Structural search for removed `getTerminal()` found zero matches; it is not a typecheck.
-- No Swift compile, XCTest, simulator, SSH runtime, WebKit runtime, device, UI/performance or paid experiment was run.
+- No Swift compile, XCTest, Simulator, actual SSH/WebKit runtime, device, UI/performance or paid experiment was run. Host tests use isolated external peers, not an SSH round-trip.
 
-Next: approve the seam/terminal-history contract; compile the integrated project with Swift 6.2-capable Xcode in app Swift 5 mode; then author approved tests and run pinned-key rejection, password/encrypted-key/dual auth, cancellation during connect/login, JSONL split Unicode/limits/null, out-of-order responses/deadlines/EOF, background/manual foreground reconnect, terminal coalescing/identical chunks/capacity, and real review HTTP/WebSocket/navigation/dismissal checks. Strict Swift 6 concurrency mode is not claimed.
+Next: compile/run the authored public-facade tests with Swift 6.2-capable Xcode in app Swift 5 mode. Connected-path verification remains: actual pinned-key rejection, password/encrypted-key/dual auth, cancellation during connect/login, out-of-order responses/deadlines/EOF, background/manual foreground reconnect, cumulative terminal coalescing/capacity, and real review HTTP/WebSocket/navigation/dismissal. Strict Swift 6 concurrency mode is not claimed.

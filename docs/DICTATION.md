@@ -1,6 +1,6 @@
 # On-device dictation
 
-## Public seam (approval requested before tests)
+## Approved public interface
 
 `ios/PiMobile/Dictation/ParakeetDictation.swift` provides:
 
@@ -95,6 +95,6 @@ The current sanitized profile has **194 aliases**. Non-command replacements and 
 
 ## Verification boundary
 
-No tests were added or run before public-seam approval. This Linux pass performed Python lint/format/syntax and JSON structural checks plus manual upstream API/concurrency review. Swift checks/LSP are unavailable in the harness; no Swift compiler, Apple SDK build, simulator, model download, or device inference was run. Treat the Swift sources as unverified until compiled on a Mac.
+After public-interface approval, XCTest vectors for the cleaner and unprepared/cancelled/invalid-profile service paths were authored. They are **uncompiled and unrun**; [TESTING.md](TESTING.md) explains the boundaries. This Linux pass performed Python lint/format/syntax and JSON structural checks plus manual upstream API/concurrency review. Swift checks/LSP are unavailable in the harness; no Swift compiler, Apple SDK build, simulator, model download, or device inference was run. Treat the Swift sources as unverified until compiled on a Mac.
 
-After approval, verify on real iPhone hardware: first-download consent/cancellation/storage; cached relaunch in airplane mode; 44.1/48 kHz and Bluetooth routes; microphone denied/empty audio; native haptics; interruption/background/route cancellation; cancelling Stop/Prepare followed by immediate retry; five-minute cap and parent draft delivery without duplicate insertion; repeated short/long French and English recordings; temperature/memory/latency; exact aliases/overlap/token boundaries/slash punctuation/fillers/output joining; editable text and explicit Send only. Audio-network privacy should be checked with network instrumentation after models are cached.
+Still verify on real iPhone hardware: first-download consent/cancellation/storage; cached relaunch in airplane mode; 44.1/48 kHz and Bluetooth routes; microphone denied/empty audio; native haptics; interruption/background/route cancellation; cancelling Stop/Prepare followed by immediate retry; five-minute cap and parent draft delivery without duplicate insertion; repeated short/long French and English recordings; temperature/memory/latency; exact aliases/overlap/token boundaries/slash punctuation/fillers/output joining; editable text and explicit Send only. Audio-network privacy should be checked with network instrumentation after models are cached.

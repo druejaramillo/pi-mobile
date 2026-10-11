@@ -24,6 +24,17 @@ git pull --ff-only
 ./tools/build-ios.sh
 ```
 
+## Run the approved tests
+
+Host protocol tests run with `npm --prefix host test`. Native XCTest targets require the Mac:
+
+```sh
+xcrun simctl list devices available
+./tools/test-ios.sh 'platform=iOS Simulator,id=<chosen-UDID>'
+```
+
+Choose a fresh Simulator with no saved machines. The script runs Core package tests plus the app-hosted session/dictation suite and saves `.xcresult` evidence under `ios/TestResults/`. Native tests are authored but have not yet been compiled or run; successful SSH/audio/review paths still need the device checklist. See [TESTING.md](TESTING.md).
+
 ## Add machines
 
 Install the host bridge following [HOST_SETUP.md](HOST_SETUP.md). Add each machine using its Tailscale DNS name/IP, SSH username, Herdr session and a verified `ssh-ed25519` host public key. Obtain that public key directly on a trusted host from `/etc/ssh/ssh_host_ed25519_key.pub`; do not trust a network scan automatically. Import an OpenSSH Ed25519 private key (enter its passphrase if encrypted) or provide a password; credentials are stored in device-only Keychain. Encrypted key support is described in [IOS_TRANSPORT.md](IOS_TRANSPORT.md).

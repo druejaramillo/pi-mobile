@@ -29,4 +29,4 @@ SSH host keys are explicitly trusted; secrets belong in iOS Keychain, never Git.
 
 ## Current verification
 
-Host TypeScript/JavaScript and importer lint/syntax checks passed. See [build status](docs/BUILD_STATUS.md) for exact checks, compatibility boundaries and unresolved gates. An Xcode build and physical iPhone pass remain required before calling this usable on-device. Do not interpret source availability as a successful native build.
+**23 host protocol tests pass**, alongside TypeScript/JavaScript and importer checks. Twenty-five native XCTest methods are authored but uncompiled/unrun; [testing instructions](docs/TESTING.md) describe exact coverage and limits. See [build status](docs/BUILD_STATUS.md) for exact checks, compatibility boundaries and unresolved gates. An Xcode build and physical iPhone pass remain required before calling this usable on-device. Do not interpret source availability as a successful native build.

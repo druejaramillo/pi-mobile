@@ -14,6 +14,7 @@ node_modules/
 dist/
 .build/
 DerivedData/
+TestResults/
 *.xcuserstate
 xcuserdata/
 ios/PiMobile.xcodeproj/
