@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-11T08:03:57Z",
+  "generatedAt": "2026-10-11T08:43:34Z",
   "title": "Pi Mobile native design",
   "extensions": {
     "native": {
@@ -11,7 +11,7 @@
         "interactive": { "source": "SwiftUI.Color.blue", "role": "primary", "purpose": "App tint and working status", "evidence": "ios/PiMobile/App/PiMobileApp.swift; ios/PiMobile/Views/AgentStatusLabel.swift" },
         "needs-input": { "source": "SwiftUI.Color.orange", "role": "state", "purpose": "Blocked agent symbol and capsule" },
         "ready-finished": { "source": "SwiftUI.Color.green", "role": "state", "purpose": "Ready/finished agents and connected machines" },
-        "error-recording": { "source": "SwiftUI.Color.red", "role": "state", "purpose": "Errors and active dictation" },
+        "error-recording": { "source": "SwiftUI.Color.red", "role": "state", "purpose": "Errors, active dictation and the confirmed Stop action" },
         "foreground": { "source": "SwiftUI.ShapeStyle.primary", "role": "neutral", "purpose": "Readable text and status labels" },
         "context": { "source": "SwiftUI.ShapeStyle.secondary", "role": "neutral", "purpose": "Location, notices and offline/unknown symbols" },
         "transcript": { "source": "Color(uiColor: .systemBackground)", "role": "neutral", "purpose": "Opaque conversation surface" },
@@ -25,23 +25,29 @@
         "accessibleSurface": "Opaque grouped system background plus shape.stroke(.primary.opacity(0.2), lineWidth: 0.5); non-hit-testing outline",
         "buttonBehavior": "System styles own pressed, disabled, accessibility and destructive-role behavior; surface-modifier fallback is separate from button styling.",
         "bottomAttachment": "iOS 26 safeAreaBar(edge: .bottom, spacing: 0); earlier iOS safeAreaInset(edge: .bottom, spacing: 0)",
-        "scope": "Controls only; system navigation/tab bars remain system-owned; no decorative shadows or custom glass simulation."
+        "scope": "Comprehensive controls including navigation/menu/header actions; native bars/back navigation remain system-owned, content remains opaque; no decorative shadows or custom glass simulation.",
+        "headers": "mobileGlassHeaderControl: minimum 44pt circle icons and minimum 44pt-high capsule text actions; mobileGlassHeaderItem hides iOS 26 shared backgrounds only for explicit glass toolbar items.",
+        "navigation": "Native Tab API on iOS 18+, tabItem fallback on iOS 17; iOS 26 tabBarMinimizeBehavior(.onScrollDown). Agent/Terminal glass capsule choices on iOS 26, segmented fallback on iOS 17–25; selected prominence and isSelected accessibility trait, minimum 44pt height.",
+        "paste": "Native PasteButtons retain system paste authorization; generic glass styles and explicit minimum 44pt frames are source observations, actual styling/hit testing require runtime verification."
       },
       "layout": {
         "evidence": "ios/PiMobile/Views/AgentConversationView.swift; ios/PiMobile/Views/GlobalAgentsView.swift",
         "adaptation": "dynamicTypeSize.isAccessibilitySize stacks directory title/status, removes title truncation, moves delivery menu below controls and changes draft line limit from 1...6 to 1...3.",
         "accessory": "Viewport-bounded scrollable bottom accessory; measured composer/header heights constrain permission panel; no authored fixed device breakpoint.",
-        "touchTargets": "Explicit minimum 44pt frames on key controls do not verify every native target on-device."
+        "touchTargets": "Explicit minimum 44pt frames cover header/pane choices, terminal ownership/key controls and both PasteButtons as well as composer/permission controls. Missing ownership/PasteButton frames resolved at source scope only; no on-device target verification."
       },
       "verification": {
-        "basis": "Saved source only; arm64 compile/link/package passed; source reviewer resolved both named findings.",
+        "basis": "Saved source only; latest arm64 compile/link/package evidence ios/TestResults/xtool-build-20261011T083838Z.log passes; 13 Core tests and six metadata CLI regressions pass. Source findings resolved only at source scope.",
+        "sdkMetadata": "5aa5d6d fixed linked SDK17 recording despite actual SDK27; current Mach-O SDK27.0.0, deployment minimum17.0.0, plist SDK metadata27.0. Not runtime appearance proof.",
+        "installation": "Refreshed working-tree build carrying UI revision 649628b and concurrent SSH work successfully provisioned, signed and installed on the connected iPhone running iOS26.6.2; supersedes ce51440 install. No launch, visual or UI runtime verification.",
+        "captureAttempt": "USB screenshot service com.apple.mobile.screenshotr returned Invalid service; no native screenshots.",
         "visualCapture": false,
         "runtimeTest": false,
         "finishDisposition": "recapture",
         "visualVerdict": "None: native screenshots required.",
         "requiredChecks": ["light/dark", "keyboard", "landscape", "accessibility text sizes", "touch targets", "Reduce Motion", "Reduce Transparency", "increased contrast"],
         "rasterProvenance": "docs/ASSETS.md",
-        "notCanonized": "No visual finding is closed by documentation; runtime legibility, clipping and native material appearance remain unverified. Icon colors are artwork, not palette primitives."
+        "notCanonized": "No visual finding is closed by documentation; runtime legibility, clipping, native material appearance and actual PasteButton generic glass styling/hit testing remain unverified. Explicit terminal ownership/PasteButton frame fixes are source-only. Icon colors are artwork, not palette primitives; no new assets."
       }
     },
     "typographyMeta": {
@@ -55,6 +61,7 @@
       "tool-content": { "displayName": "Tool Content", "purpose": "Selectable monospaced tool output. Commands use body.monospaced(); terminal keys subheadline.monospaced()." }
     },
     "motion": [
+      { "name": "pane-selection", "value": "SwiftUI .smooth(duration: 0.25)", "purpose": "iOS 26 Agent/Terminal selection changes only; nil under accessibilityReduceMotion. Selected choice is prominent and carries isSelected; ownership unchanged.", "evidence": "ios/PiMobile/Views/MobilePaneSurfacePicker.swift" },
       { "name": "dictation-state", "value": "SwiftUI .smooth(duration: 0.25)", "purpose": "Composer layout changes on dictation.state; nil when accessibilityReduceMotion is true.", "evidence": "ios/PiMobile/Views/AgentConversationView.swift" },
       { "name": "state-symbol", "value": "symbolEffect(.bounce, value: reduceMotion ? \"\" : state)", "purpose": "Status/dictation state changes only, suppressed by a constant trigger under Reduce Motion; no ambient loops.", "evidence": "ios/PiMobile/Views/AgentStatusLabel.swift; ios/PiMobile/Views/MobileSettingsView.swift" },
       { "name": "native-feedback", "value": "sensoryFeedback(.selection/.success, trigger:)", "purpose": "Selection on tab/pane changes; success only after agent.prompt host acknowledgment. Haptic feedback, not visual delivery proof.", "evidence": "ios/PiMobile/App/PiMobileApp.swift; ios/PiMobile/Views/PaneDetailView.swift; ios/PiMobile/Views/AgentConversationView.swift" }
@@ -69,7 +76,8 @@
     { "name": "User transcript message", "kind": "custom", "refersTo": "user-message", "description": "Opaque secondary system surface with real speaker label; assistant text stays directly on transcript background.", "nativeEvidence": "AgentConversationView.swift: TranscriptMessageView" },
     { "name": "Permission panel", "kind": "custom", "refersTo": "permission-panel", "description": "Opaque clipped scrollable panel, prompt disclosure, optional rounded-border response field and separate glass action buttons; host owns outcomes.", "nativeEvidence": "AgentConversationView.swift: PiDialogPanel" },
     { "name": "Agent directory row", "kind": "custom", "refersTo": "directory-row", "description": "Opaque inset-grouped list row with headline, context, capsule status and explicit cached notice; title/status stack at accessibility sizes.", "nativeEvidence": "GlobalAgentsView.swift: AgentDirectoryRow" },
-    { "name": "System navigation", "kind": "nav", "description": "Unchanged Agents/Machines/Settings tabs, native stacks/back gestures, segmented pane views and real-page review sheet; no HTML/CSS preview.", "nativeEvidence": "App/PiMobileApp.swift: MobileRootView; Views/PaneDetailView.swift: ReviewSheet" }
+    { "name": "Header actions", "kind": "button", "refersTo": "header-icon", "description": "44pt circle symbols or minimum 44pt-high text capsules; Save/add prominent. Explicit glass toolbar items hide shared backgrounds on iOS 26 only. Done/Cancel/Save/Back, refresh/edit/review/Stop and inline dismissal/follow controls covered.", "nativeEvidence": "MobileGlassStyle.swift; GlobalAgentsView.swift; MachinesView.swift; MachineEditorView.swift; PaneDetailView.swift; AgentConversationView.swift; MobileSettingsView.swift" },
+    { "name": "System navigation", "kind": "nav", "description": "Agents/Machines/Settings native Tab API on iOS 18+, tabItem fallback on iOS 17, iOS 26 scroll minimization; native stacks/back gestures. iOS 26 glass Agent/Terminal choices, segmented fallback17–25; real-page review sheet with glass return action; no HTML/CSS preview.", "nativeEvidence": "App/PiMobileApp.swift: MobileRootView; Views/PaneDetailView.swift: ReviewSheet" }
   ],
   "narrative": {
     "overview": "This is a source-derived native system, **not a visually verified design**. The user chose native iOS rather than a browser-shaped terminal application. SwiftUI platform controls carry the interface; the actual Plannotator page and SwiftTerm renderer retain their own content presentation.\n\nThe approved Apple Liquid Glass refresh adds a prettier, more magical native control layer without replacing the Operate identity or navigation. Surface-specific direction remains in [docs/IOS_SURFACE.md](docs/IOS_SURFACE.md).",
@@ -77,8 +85,8 @@
     "rules": [
       { "name": "The Semantic State Rule", "body": "Status always has text and an SF Symbol, never color alone; cached/unknown agents cannot appear ready. Appearance follows the system. The icon's fixed colors are artwork, not UI palette tokens.", "section": "colors" },
       { "name": "The Native Type Rule", "body": "Keep system text styles and SF Symbols; no custom display face. Accessibility-size rows stack title/status and remove title truncation. Draft lines and delivery-menu placement adapt to text size; actual clipping remains unverified.", "section": "typography" },
-      { "name": "The Controls-Only Glass Rule", "body": "Apple's iOS 26 `.glassEffect(.regular, in:)`, `.glass` and `.glassProminent` belong to controls; transcript, directory content and permission explanations stay opaque. System navigation/tab bars adopt native glass without custom replacements. `GlassEffectContainer(spacing: 8)` shares rendering across adjacent controls without merging their resting shapes.", "section": "elevation" },
-      { "name": "The State-Only Motion Rule", "body": "Dictation changes use `.smooth(duration: 0.25)` unless Reduce Motion is enabled; status/dictation symbol bounces are state-triggered and suppressed under Reduce Motion. Selection haptics follow native tab/pane changes; success feedback follows the host acknowledgment. Navigation pushes/sheets remain system transitions. Streaming text is not animated; no ambient loops or custom entrance choreography.", "section": "elevation" }
+      { "name": "The Controls-Only Glass Rule", "body": "Apple's iOS 26 `.glassEffect(.regular, in:)`, `.glass` and `.glassProminent` belong to controls; transcript, directory content and permission explanations stay opaque. Glass coverage includes navigation/menu/header actions, as explicitly requested by the user; it is not limited to the composer. Native bars remain system-owned. Explicit glass toolbar buttons use `mobileGlassHeaderItem` to hide only their iOS 26 shared toolbar background, avoiding a second glass layer; native back navigation is not replaced. `GlassEffectContainer(spacing: 8)` shares rendering across adjacent controls without merging their resting shapes.", "section": "elevation" },
+      { "name": "The State-Only Motion Rule", "body": "Dictation and iOS 26 Agent/Terminal selection changes use `.smooth(duration: 0.25)` unless Reduce Motion is enabled; status/dictation symbol bounces are state-triggered and suppressed under Reduce Motion. Selection haptics follow native tab/pane changes; success feedback follows the host acknowledgment. Navigation pushes/sheets remain system transitions. Streaming text is not animated; no ambient loops or custom entrance choreography.", "section": "elevation" }
     ],
     "dos": ["Do preserve platform navigation, semantic colors, Dynamic Type and SF Symbols.", "Do keep glass on controls, content opaque and accessibility fallbacks native.", "Do distinguish unknown/unreachable state from a verified empty directory.", "Do tie motion to state, honor Reduce Motion and await host acknowledgment for success feedback.", "Do capture native screenshots in both appearances, keyboard/landscape and large text sizes before claiming visual readiness."],
     "donts": ["Don't use browser screenshots, fake HTML/CSS glass or mock conversations as evidence of the native app.", "Don't substitute fixed hex palettes for dynamic system colors or UI tokens for icon artwork.", "Don't add decorative dashboard metrics, ambient animation, custom navigation gestures or notification controls.", "Don't treat compilation or resolved source findings as a visual verdict."]
