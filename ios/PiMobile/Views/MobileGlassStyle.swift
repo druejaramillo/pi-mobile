@@ -53,7 +53,7 @@ private struct MobileGlassSurfaceModifier<S: Shape>: ViewModifier {
     func body(content: Content) -> some View {
         if reduceTransparency || contrast == .increased {
             content.background(Color(uiColor: .secondarySystemGroupedBackground), in: shape)
-                .overlay { shape.stroke(.primary.opacity(0.2), lineWidth: 0.5) }
+                .overlay { shape.stroke(.primary.opacity(0.2), lineWidth: 0.5).allowsHitTesting(false) }
         } else if #available(iOS 26.0, *) {
             content.glassEffect(.regular, in: shape)
         } else {

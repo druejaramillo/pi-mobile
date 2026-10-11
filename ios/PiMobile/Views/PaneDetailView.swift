@@ -33,14 +33,18 @@ struct PaneDetailView: View {
                 Picker("Pane view", selection: $surface) {
                     Text("Agent").tag("Agent")
                     Text("Terminal").tag("Terminal")
-                }.pickerStyle(.segmented).padding(.horizontal).padding(.vertical, 8)
+                }.pickerStyle(.segmented).padding(.horizontal, 20).padding(.vertical, 8)
             }
             if connection.state != "connected" {
                 HStack {
                     Label("Disconnected", systemImage: "network.slash")
                     Spacer()
-                    Button("Reconnect") { Task { await reconnectPane() } }.disabled(attaching)
-                }.font(.subheadline).padding().background(.bar)
+                    Button("Reconnect") { Task { await reconnectPane() } }
+                        .mobileGlassButtonStyle().buttonBorderShape(.capsule)
+                        .frame(minHeight: 44).disabled(attaching)
+                }
+                .font(.subheadline).padding(.horizontal, 20).padding(.vertical, 10)
+                .background(Color(uiColor: .secondarySystemBackground))
             }
             if let errorMessage {
                 HStack(alignment: .top) {
@@ -48,7 +52,8 @@ struct PaneDetailView: View {
                     Spacer()
                     Button("Dismiss error", systemImage: "xmark") { self.errorMessage = nil }
                         .labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44)
-                }.padding(.horizontal).padding(.vertical, 8).background(.thinMaterial)
+                }.padding(.horizontal, 20).padding(.vertical, 8)
+                    .background(Color(uiColor: .secondarySystemBackground))
             }
             if surface == "Agent" && currentPane.agent == "pi" {
                 if let agent {
@@ -62,7 +67,9 @@ struct PaneDetailView: View {
                     } description: {
                         Text("This Pi process has no compatible mobile bridge attached. Its existing TUI is still available.")
                     } actions: {
-                        Button("Open terminal") { surface = "Terminal" }.buttonStyle(.borderedProminent)
+                        Button("Open terminal") { surface = "Terminal" }
+                            .mobileGlassButtonStyle(prominent: true)
+                            .controlSize(.large).buttonBorderShape(.capsule)
                     }
                 }
             } else {
@@ -71,6 +78,8 @@ struct PaneDetailView: View {
         }
         .navigationTitle(currentPane.title.isEmpty ? "Terminal" : currentPane.title)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar)
+        .sensoryFeedback(.selection, trigger: surface)
         .toolbar {
             if !currentPane.reviews.isEmpty {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -143,7 +152,8 @@ struct PaneDetailView: View {
     private var terminalSurface: some View {
         VStack(spacing: 0) {
             HStack {
-                Text(terminalWritable ? "You control this terminal" : "Read-only terminal")
+                Label(terminalWritable ? "You control this terminal" : "Read-only terminal",
+                    systemImage: terminalWritable ? "keyboard" : "lock")
                     .font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 if terminalWritable {
@@ -167,10 +177,15 @@ struct PaneDetailView: View {
                             .disabled(connection.state != "connected" || attaching)
                     }
                 }
-            }.padding(.horizontal).padding(.vertical, 8)
+            }
+            .mobileGlassButtonStyle().buttonBorderShape(.capsule)
+            .font(.subheadline).controlSize(.regular)
+            .padding(.horizontal, 16).padding(.vertical, 8)
             MobileTerminalView(frame: connection.terminalFrame?.terminalId == pane.terminalId ? connection.terminalFrame : nil,
                 onInput: { sendTerminalBytes($0) }, onResize: { cols, rows in resizeTerminal(cols, rows) },
                 interactive: terminalWritable)
+        }
+        .mobileBottomBar {
             TerminalKeyStrip(interactive: terminalWritable, send: sendTerminalBytes)
         }
     }
@@ -280,24 +295,30 @@ private struct TerminalKeyStrip: View {
     let interactive: Bool
     let send: (Data) -> Void
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                key("Esc", bytes: "\u{1b}")
-                key("Ctrl-C", bytes: "\u{03}")
-                key("Tab", bytes: "\t")
-                key("Enter", bytes: "\r")
-                arrow("Up", symbol: "arrow.up", bytes: "\u{1b}[A")
-                arrow("Down", symbol: "arrow.down", bytes: "\u{1b}[B")
-                arrow("Left", symbol: "arrow.left", bytes: "\u{1b}[D")
-                arrow("Right", symbol: "arrow.right", bytes: "\u{1b}[C")
-            }.padding(.horizontal)
-        }.padding(.vertical, 4).background(.bar).disabled(!interactive)
+        MobileGlassContainer {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    key("Esc", bytes: "\u{1b}")
+                    key("Ctrl-C", bytes: "\u{03}")
+                    key("Tab", bytes: "\t")
+                    key("Enter", bytes: "\r")
+                    arrow("Up", symbol: "arrow.up", bytes: "\u{1b}[A")
+                    arrow("Down", symbol: "arrow.down", bytes: "\u{1b}[B")
+                    arrow("Left", symbol: "arrow.left", bytes: "\u{1b}[D")
+                    arrow("Right", symbol: "arrow.right", bytes: "\u{1b}[C")
+                }
+                .mobileGlassButtonStyle().buttonBorderShape(.capsule)
+                .padding(.horizontal, 16).padding(.vertical, 8)
+            }
+        }
+        .disabled(!interactive)
     }
     private func key(_ name: String, bytes: String) -> some View {
-        Button(name) { send(Data(bytes.utf8)) }.buttonStyle(.bordered).frame(minHeight: 44)
+        Button(name) { send(Data(bytes.utf8)) }
+            .font(.subheadline.monospaced()).frame(minWidth: 44, minHeight: 44)
     }
     private func arrow(_ name: String, symbol: String, bytes: String) -> some View {
         Button(name, systemImage: symbol) { send(Data(bytes.utf8)) }
-            .labelStyle(.iconOnly).buttonStyle(.bordered).frame(minWidth: 44, minHeight: 44)
+            .labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44)
     }
 }

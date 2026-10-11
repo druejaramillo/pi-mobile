@@ -63,6 +63,7 @@ struct DictationButton: View {
     @State private var setup = false
     @State private var operationInFlight = false
     @State private var ownsRecording = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: 8) {
@@ -83,10 +84,18 @@ struct DictationButton: View {
                     }
                 } else { setup = true }
             } label: {
-                Label(dictation.state == "recording" ? "Stop" : "Dictate",
-                    systemImage: dictation.state == "recording" ? "stop.circle.fill" : "mic")
+                if dictation.state == "transcribing" || dictation.state == "loading" {
+                    ProgressView().accessibilityLabel(dictation.state == "loading" ? "Preparing dictation" : "Transcribing on this iPhone")
+                } else {
+                    Label(dictation.state == "recording" ? "Stop recording" : "Dictate instructions",
+                        systemImage: dictation.state == "recording" ? "stop.circle.fill" : "mic")
+                        .labelStyle(.iconOnly)
+                        .symbolEffect(.bounce, value: reduceMotion ? "" : dictation.state)
+                }
             }
-            .buttonStyle(.bordered)
+            .frame(minWidth: 44, minHeight: 44)
+            .buttonStyle(.borderless)
+            .tint(dictation.state == "recording" ? .red : .blue)
             .disabled(operationInFlight || dictation.state == "loading" || dictation.state == "transcribing")
             .accessibilityHint(dictation.state == "recording" ? "Transcribe this recording into the draft" : "Record instructions locally")
             if dictation.state == "recording" {
@@ -95,8 +104,7 @@ struct DictationButton: View {
                     dictation.cancelRecording()
                 }
                     .labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44)
-            } else if dictation.state == "transcribing" {
-                ProgressView().accessibilityLabel("Transcribing on this iPhone")
+                    .buttonStyle(.borderless)
             }
         }
         .onChange(of: dictation.completedTranscriptID) { _, id in
