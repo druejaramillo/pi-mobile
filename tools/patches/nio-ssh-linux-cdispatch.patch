@@ -1,0 +1,11 @@
+diff --git a/Sources/NIOSSH/Keys And Signatures/NIOSSHCertifiedPublicKey.swift b/Sources/NIOSSH/Keys And Signatures/NIOSSHCertifiedPublicKey.swift
+--- a/Sources/NIOSSH/Keys And Signatures/NIOSSHCertifiedPublicKey.swift
++++ b/Sources/NIOSSH/Keys And Signatures/NIOSSHCertifiedPublicKey.swift
+@@ -13,6 +13,7 @@
+ 
+ import Crypto
+ import Dispatch
++import CDispatch
+ import Foundation
+ import NIOCore
+ #if canImport(Darwin)

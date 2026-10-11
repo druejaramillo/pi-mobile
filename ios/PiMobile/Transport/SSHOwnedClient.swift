@@ -23,7 +23,13 @@ struct SSHOwnedClient {
                                                       hostKeyValidator: .trustedKeys([configuration.hostKey]))
             let authenticated = channel.eventLoop.makePromise(of: Void.self)
             let readiness = SSHAuthenticationReadiness(authenticated: authenticated)
-            try await channel.pipeline.addHandler(readiness).get()
+            try await channel.eventLoop.submit {
+                // Citadel's handshake handler consumes authentication events, so observe immediately after NIOSSH.
+                let sshHandler = try channel.pipeline.syncOperations.handler(type: NIOSSHHandler.self)
+                try channel.pipeline.syncOperations.addHandler(readiness, position: .after(sshHandler))
+            }.get()
+            // NIOSSH consumes channelInactive; its raw close future must also finish a pending login.
+            channel.closeFuture.whenComplete { _ in readiness.channelClosed() }
             let deadline = channel.eventLoop.scheduleTask(in: .seconds(15)) {
                 readiness.expire(on: channel)
             }
@@ -57,12 +63,17 @@ private final class SSHAuthenticationReadiness: ChannelInboundHandler, @unchecke
 
     func errorCaught(context: ChannelHandlerContext, error: Error) {
         fail(error)
+        context.fireErrorCaught(error)
         context.close(promise: nil)
     }
 
     func channelInactive(context: ChannelHandlerContext) {
         fail(SSHBridgeError.disconnected)
         context.fireChannelInactive()
+    }
+
+    func channelClosed() {
+        fail(SSHBridgeError.disconnected)
     }
 
     func expire(on channel: Channel) {

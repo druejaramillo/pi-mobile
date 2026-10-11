@@ -22,6 +22,7 @@ TestResults/
 xcuserdata/
 ios/PiMobile.xcodeproj/
 ios/.xtool-dependencies/
+ios/.patched-dependencies/
 ios/.xtool-support/
 ios/xtool/
 ios/.swiftpm/

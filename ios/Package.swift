@@ -19,7 +19,8 @@ let package = Package(
     products: [.library(name: "PiMobile", targets: ["PiMobile"])],
     dependencies: [
         .package(path: "PiMobileCore"),
-        .package(url: "https://github.com/orlandos-nl/Citadel.git", revision: "ae8562f895de06ccb86fdb1cbb65fd99c8976e12"),
+        // Same pinned revision plus the checked-in existing-channel event-loop fix, on both build lanes.
+        .package(path: ".patched-dependencies/Citadel"),
         // Prepared from the original pin plus the single checked-in manifest patch.
         .package(path: ".xtool-dependencies/SwiftTerm"),
         // Parakeet ASR does not use the optional NeMo TTS text-normalization binary.

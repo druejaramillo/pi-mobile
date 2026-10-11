@@ -18,6 +18,14 @@ Native iPhone app, direct SSH over Tailscale, existing Herdr/Pi sessions, global
 6. Linux build-failure fix: private LLVM XML runtime link plus a scoped SwiftPM manifest-cache bypass. The original/repeat failures are retained as controls; four real builds now pass, including a source-timestamp rebuild. Unsigned iPhone app produced at this checkpoint (`a96d1e3`). Seven Core tests pass; eighteen app-hosted tests remain uncompiled/unrun.
 7. Physical USB installation (2026-10-11): reconnect made the Apple device visible; a scoped `usbmuxd` restart resolved its startup/descriptor failure. Existing pairing validated. `idevicedevmodectl reveal` exposed Developer Mode; the user enabled it and completed the reboot/confirmation. The explicit deployment script ran once and returned `Successfully installed!`. First app launch remains a human verification gate.
 
+## SSH save/launch crash fix
+
+Five crash reports copied from the connected iPhone (kept on the device) show a fatal `EventLoop.preconditionInEventLoop` assertion in Citadel's existing-channel pipeline setup. The first followed Save; later launches retried the persisted machine through `refreshAll`. The same app transport sources reproduced the assertion against a disposable loopback server on Linux, exit 132.
+
+Both build lanes now prepare the unchanged Citadel revision with a checked-in patch that confines pipeline/session construction to the socket's event loop. Authentication readiness observes events before Citadel's consuming handler and observes the raw close future too. No profile, Keychain, host-key policy, Tailscale configuration or host agent is reset or changed.
+
+`tools/test-ssh-transport.sh` passes repeated successful logins/clean closes, wrong-password rejection, wrong-host-key rejection and raw socket teardown during stalled login. Thirteen Core tests and the real iPhone compile/link/package pass. Evidence is retained privately under `ios/TestResults/`; the fixture-only Linux `CDispatch` import is a compiler compatibility fix, not a runtime change. The corrected app still needs an authorized in-place update and a device launch/connection check with the existing saved machine before claiming the user's on-device crash loop is resolved.
+
 ## Machine credential paste checkpoint
 
 Private keys can now be pasted with a native system Paste control or imported from a file; encrypted-key passphrases have a separate Paste control and remain masked. Preparation checks OpenSSH armor/base64, normalizes key line endings, preserves passphrases verbatim and enforces the serialized credential limit. Keys remain device-only Keychain items; host-key verification is unchanged. Keyless Tailscale SSH setup is not added.

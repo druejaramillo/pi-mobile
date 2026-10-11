@@ -8,6 +8,7 @@ command -v swift >/dev/null || {
 	exit 2
 }
 command -v git >/dev/null
+"$root/tools/prepare-ssh-dependency.sh"
 swiftterm_revision=4dcf5278fde40af60c36f667d8a472a90b38b247
 swiftterm_dir="$root/ios/.xtool-dependencies/SwiftTerm"
 patch="$root/tools/patches/swiftterm-linux-ios.patch"

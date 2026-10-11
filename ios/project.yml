@@ -15,8 +15,7 @@ packages:
   PiMobileCore:
     path: PiMobileCore
   Citadel:
-    url: https://github.com/orlandos-nl/Citadel.git
-    revision: ae8562f895de06ccb86fdb1cbb65fd99c8976e12
+    path: .patched-dependencies/Citadel
   SwiftTerm:
     url: https://github.com/migueldeicaza/SwiftTerm.git
     revision: 4dcf5278fde40af60c36f667d8a472a90b38b247

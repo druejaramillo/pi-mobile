@@ -1,0 +1,37 @@
+diff --git a/Sources/Citadel/Client.swift b/Sources/Citadel/Client.swift
+index a0d0eb3..0f310e9 100644
+--- a/Sources/Citadel/Client.swift
++++ b/Sources/Citadel/Client.swift
+@@ -241,18 +241,20 @@ public final class SSHClient {
+         algorithms: SSHAlgorithms = SSHAlgorithms(),
+         protocolOptions: Set<SSHProtocolOption> = []
+     ) async throws -> SSHClient {
+-        let inboundChannelHandler = SSHClientInboundChannelHandler()
+-        try await SSHClientSession.addHandlers(
+-            on: channel,
+-            authenticationMethod: authenticationMethod(),
+-            inboundChannelHandler: inboundChannelHandler,
+-            hostKeyValidator: hostKeyValidator,
+-            protocolOptions: protocolOptions
+-        ).get()
+-        
+-        let sshHandler = try await channel.pipeline.handler(type: NIOSSHHandler.self).get()
+-        let session = SSHClientSession(channel: channel, inboundChannelHandler: inboundChannelHandler, sshHandler: sshHandler)
+-        
++        // Pipeline sync operations and NIOLoopBoundBox construction must stay on the channel's event loop.
++        let session = try await channel.eventLoop.flatSubmit {
++            let inboundChannelHandler = SSHClientInboundChannelHandler()
++            return SSHClientSession.addHandlers(
++                on: channel,
++                authenticationMethod: authenticationMethod(),
++                inboundChannelHandler: inboundChannelHandler,
++                hostKeyValidator: hostKeyValidator,
++                protocolOptions: protocolOptions
++            ).flatMapThrowing {
++                let sshHandler = try channel.pipeline.syncOperations.handler(type: NIOSSHHandler.self)
++                return SSHClientSession(channel: channel, inboundChannelHandler: inboundChannelHandler, sshHandler: sshHandler)
++            }
++        }.get()
+         return SSHClient(
+             session: session,
+             authenticationMethod: authenticationMethod(),

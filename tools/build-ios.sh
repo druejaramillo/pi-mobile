@@ -20,6 +20,7 @@ else
   printf '%s\n' 'Pi Mobile: could not determine the selected Xcode Swift version.' >&2
   exit 2
 fi
+"$root/tools/prepare-ssh-dependency.sh"
 cd "$root/ios"
 xcodegen generate --spec project.yml
 xcodebuild -project PiMobile.xcodeproj -scheme PiMobile \

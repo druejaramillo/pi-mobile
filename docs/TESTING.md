@@ -58,6 +58,20 @@ python3 tools/check-iphone-build-metadata.py ios/xtool/PiMobile.app
 
 Six CLI tests pass. The actual pre-fix app failed with `linked SDK is 17.0.0`; after the app-scoped linker correction it passes with `linked SDK 27.0.0; minimum iOS 17.0.0`. The build pipeline additionally requires exact agreement with the supplied Apple's SDK settings and derived plist. Deployment refuses a stale legacy-SDK executable before signing. These checks do not execute UIKit or prove the rendered material; they prevent the specific packaging condition that kept native bars in compatibility styling.
 
+## SSH setup — real loopback regression
+
+```sh
+./tools/test-ssh-transport.sh
+```
+
+The save/launch crash investigation adds this standalone connection-boundary fixture. It compiles the app's actual `SSHOwnedClient`, `SSHBridgeConfiguration` and `SSHChannelOwnership` sources, without `@testable`, mocked transport or inspection of private state. Servers bind only to `127.0.0.1` on ephemeral ports, use freshly generated host keys and accept only a synthetic test password. No saved machine, Keychain, Tailscale settings, host bridge or live agent is accessed.
+
+**Passed on Linux with Swift 6.4:** three fresh authenticated connections and clean closes, prompt password rejection, mismatched host-key rejection and closing owned sockets during a stalled login. The unpatched code failed with the exact device assertion in `EventLoop.preconditionInEventLoop` (exit 132). Applying only the event-loop patch exposed a readiness timeout; placing the observer before Citadel's handshake handler and observing the raw close future resolved it. Evidence: `ios/TestResults/ssh-transport-red.log`, `ssh-transport-loop-fix.log` and `ssh-transport-final.log`.
+
+The script stages symlinks under ignored `.build/ssh-transport-regression`, uses the same pinned/patched Citadel as both app lanes, and disables crash core dumps. Its Linux-only NIOSSH patch adds the defining `CDispatch` import required by Swift 6.4; it changes no runtime behavior or iOS dependency source. First compilation builds the native dependencies; cached runs take seconds. macOS execution is supported by the fixture but unrun here.
+
+This is actual loopback SSH authentication, not an app-hosted XCTest or an iPhone check. After updating the device app, confirm launch with the existing saved machine, connection/error presentation, background disconnect and foreground refresh without deleting its settings.
+
 ## Native session and dictation — Xcode Simulator
 
 Use Xcode 26+ / Swift 6.2+, XcodeGen, and a **fresh Simulator with no saved machines**. The app-hosted test target launches the real app; a previously configured Simulator can otherwise trigger its normal foreground machine refresh.
@@ -104,7 +118,7 @@ Use dedicated disposable sessions for mutation checks. The refreshed app was sub
 
 ## Still outside automated proof
 
-- Connected native SSH correlation/deadlines/cancellation, host-key rejection against an actual server, password/encrypted-key authentication and foreground/background reconnect.
+- Full iPhone SSH/bridge correlation, deadlines/cancellation, encrypted-key authentication and foreground/background reconnect. Loopback password authentication, host-key rejection and raw socket teardown now have the separate automated proof above, not iOS execution proof.
 - Cumulative/coalesced native terminal rendering, the 8 MiB cap, keyboard/cursor modes, input ownership and throughput/backpressure.
 - Actual Plannotator forwarding, ATS, assets/WebSockets, navigation and tunnel lifetime.
 - Successful Parakeet model preparation/cache, microphone routes, five-minute cap, repeated completion delivery, cancellation timing, offline inference and memory/thermal/privacy measurements.
