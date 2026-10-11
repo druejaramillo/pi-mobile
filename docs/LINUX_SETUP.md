@@ -1,6 +1,6 @@
 # Linux build and iPhone deployment with xtool
 
-This is a parallel **physical-iPhone** build lane. The XcodeGen/Mac project remains unchanged. **The real unsigned arm64 app now builds successfully, including repeat builds.** The user supplied Apple's SDK and configured signing credentials locally. No installation or iPhone runtime verification has occurred. See [BUILD_STATUS.md](BUILD_STATUS.md).
+This is a parallel **physical-iPhone** build lane. The XcodeGen/Mac project remains unchanged. **The real unsigned arm64 app now builds successfully, including repeat builds.** The user supplied Apple's SDK and configured signing credentials locally. A deliberate signed USB install succeeded on an iPhone running iOS 26.6.2; app launch/runtime verification remains outstanding. See [BUILD_STATUS.md](BUILD_STATUS.md).
 
 ## What is ready on this machine
 
@@ -97,7 +97,31 @@ idevice_id -l
 
 The deploy command requires one explicit USB UDID and a successfully built app. It provisions/signs a staged copy and installs once; no automatic device selection, wireless pairing setup or retry loop is added. xtool may prefix the installed bundle ID with `XTL-…`; the Mac-signed build can therefore be a separate install with separate app data. Open **Pi Mobile** manually after installation; a successful install is not proof it runs.
 
-If USB discovery fails, first check `usbmuxd`, cable/unlock/trust and `idevicepair validate`. Pairing/Developer Mode are human/device actions; do not reset pairing records or unrelated services blindly.
+### Missing Trust prompt or Developer Mode
+
+Keep the phone unlocked on the Home Screen and use a direct, data-capable USB connection. Charging alone does not prove data access.
+
+- `lsusb -d 05ac:` must show an Apple device. If not, check the cable/port and that the phone is plugged into the computer running these commands.
+- `systemctl is-active usbmuxd` should become active when the device appears; its packaged udev rules start it automatically. If Apple is visible but `idevice_id -l` remains empty, inspect `journalctl -u usbmuxd --since '5 minutes ago'`. A descriptor/startup failure on this machine was resolved by **one** `sudo systemctl restart usbmuxd` followed by discovery. Do not repeatedly restart it during installation.
+- Target the chosen device explicitly:
+
+```sh
+udid='<chosen-iPhone-UDID>'
+idevicepair -u "$udid" validate
+idevicedevmodectl -u "$udid" list
+```
+
+A successful pairing validation means an existing Trust relationship is valid; another prompt is not required. If validation says it is unpaired, run `idevicepair -u "$udid" pair` while unlocked and approve Trust on the phone. Do not unpair or reset privacy settings blindly.
+
+If the Developer Mode entry is absent **after pairing**, reveal it without enabling/rebooting automatically:
+
+```sh
+idevicedevmodectl -u "$udid" reveal
+```
+
+Then open **Settings → Privacy & Security → Developer Mode**, enable it, accept the restart, unlock again and confirm enabling it. Recheck `idevicedevmodectl -u "$udid" list`; it must report **enabled** before deployment. These are deliberate phone actions, not unattended security-policy changes.
+
+**Verified install checkpoint:** the explicit deployment script completed provisioning, signing, installation and verification once on 2026-10-11. No certificate-revocation prompt appeared. The installer reported `Successfully installed!`; opening the app and exercising its native behavior are separate verification gates.
 
 ## Verification and evidence
 

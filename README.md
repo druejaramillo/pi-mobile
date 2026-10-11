@@ -2,7 +2,7 @@
 
 A native iPhone companion to **existing Herdr and Pi sessions**, reached directly over SSH/Tailscale. Local Parakeet v3 dictation. Actual Plannotator reviews inside the app. **No notifications or push service.**
 
-This repository contains an integrated source checkpoint, **not a device-verified release**. The Mac lane uses **Xcode 26+ / Swift 6.2+**. The parallel **Linux/xtool** lane now compiles and links the real arm64 iPhone app with an Apple-supplied SDK. Signing is configured locally; installation and device behavior remain unverified. See [PRODUCT.md](PRODUCT.md) for the approved behavior and [bridge protocol](docs/BRIDGE_PROTOCOL.md) for the shared interface.
+This repository contains an integrated source checkpoint, **not a device-verified release**. The Mac lane uses **Xcode 26+ / Swift 6.2+**. The parallel **Linux/xtool** lane now compiles and links the real arm64 iPhone app with an Apple-supplied SDK. The signed app has been installed successfully over USB on an iPhone; launch and device behavior remain unverified. See [PRODUCT.md](PRODUCT.md) for the approved behavior and [bridge protocol](docs/BRIDGE_PROTOCOL.md) for the shared interface.
 
 ## Start on your Mac
 
@@ -24,7 +24,7 @@ The launch **Agents** tab indexes existing agents across your machines, with sta
 ./tools/build-ios-linux.sh
 ```
 
-Follow [Linux setup](docs/LINUX_SETUP.md) for the Apple-provided SDK, private toolchain, signing and explicit USB deployment. Seven Core XCTest methods pass on this Linux machine, and full/repeated unsigned app builds succeed. The app has **not** been installed or run on a phone. The Mac build remains available.
+Follow [Linux setup](docs/LINUX_SETUP.md) for the Apple-provided SDK, private toolchain, signing and explicit USB deployment. Seven Core XCTest methods pass on this Linux machine, and full/repeated unsigned app builds succeed. The signed app is **installed on an iPhone**, but launch/runtime verification remains outstanding. The Mac build remains available.
 
 ## Layout
 

@@ -2,7 +2,7 @@
 
 ## Readiness
 
-**Compile/link/package checkpoint, not a device-verified release.** The private Linux Swift 6.4/xtool 1.21 lane now builds the real unsigned arm64 iPhone app with the user-supplied Xcode 27 slim SDK; full and repeated builds pass. Signing credentials are configured locally but have not been used by this diagnostic work. No phone installation/execution has occurred. Core XCTest passes; app-hosted tests, Mac/Xcode validation, rendering and actual permission compatibility remain unverified.
+**Physical-install checkpoint, not a device-verified release.** The private Linux Swift 6.4/xtool 1.21 lane builds the real arm64 iPhone app with the user-supplied Xcode 27 slim SDK; full and repeated builds pass. One deliberate USB deployment successfully provisioned, signed, installed and verified Pi Mobile on an iPhone running iOS 26.6.2. Pairing and Developer Mode were verified first; no certificate-revocation prompt appeared. App launch/runtime behavior, app-hosted tests, Mac/Xcode validation, rendering and actual permission compatibility remain unverified.
 
 ## Approved scope
 
@@ -15,7 +15,8 @@ Native iPhone app, direct SSH over Tailscale, existing Herdr/Pi sessions, global
 3. Host and native integration: committed and pushed (`93ae84e`) with pinned dependencies and setup documentation.
 4. Approved-boundary test suite: committed/pushed (`1c0ee29`), with 23 host tests and 25 XCTest methods.
 5. Linux xtool build/deploy lane (`376f3df`): private verified toolchain, resolved graph, exact SwiftTerm cross-target manifest patch and explicit USB deployment scripts.
-6. Linux build-failure fix: private LLVM XML runtime link plus a scoped SwiftPM manifest-cache bypass. The original/repeat failures are retained as controls; four real builds now pass, including a source-timestamp rebuild. Unsigned iPhone app produced; no deployment. Seven Core tests pass; eighteen app-hosted tests remain uncompiled/unrun.
+6. Linux build-failure fix: private LLVM XML runtime link plus a scoped SwiftPM manifest-cache bypass. The original/repeat failures are retained as controls; four real builds now pass, including a source-timestamp rebuild. Unsigned iPhone app produced at this checkpoint (`a96d1e3`). Seven Core tests pass; eighteen app-hosted tests remain uncompiled/unrun.
+7. Physical USB installation (2026-10-11): reconnect made the Apple device visible; a scoped `usbmuxd` restart resolved its startup/descriptor failure. Existing pairing validated. `idevicedevmodectl reveal` exposed Developer Mode; the user enabled it and completed the reboot/confirmation. The explicit deployment script ran once and returned `Successfully installed!`. First app launch remains a human verification gate.
 
 ## Implemented in source
 
@@ -53,4 +54,4 @@ Native iPhone app, direct SSH over Tailscale, existing Herdr/Pi sessions, global
 - Native visual inspection and independent finish review are blocked on actual iOS screenshots (Mac Simulator or physical phone). [DESIGN.md](../DESIGN.md) records a source baseline, not visual proof.
 - Public test interfaces are approved. Seven Core methods compile/pass on Linux; eighteen app XCTest methods remain **uncompiled/unrun**. Connected native transport, cumulative history, real permissions and successful audio/inference paths remain outside automated proof.
 
-No global Pi, Herdr, SSH, Tailscale or VoxType settings were changed; no host installation, live-session restart, Parakeet model download or paid inference was performed. The authorized Linux setup added private build tools and `usbmuxd` through desktop authorization. The user subsequently supplied Apple's SDK and configured signing credentials locally; this diagnosis did not read/change credentials, create/revoke certificates, sign or deploy. Follow [LINUX_SETUP.md](LINUX_SETUP.md) or [MAC_SETUP.md](MAC_SETUP.md) and record real device results here before daily use.
+No global Pi, Herdr, SSH, Tailscale or VoxType settings were changed; no host installation, live-session restart, Parakeet model download or paid inference was performed. The authorized Linux setup added private build tools and `usbmuxd` through desktop authorization; USB troubleshooting restarted only that service, without resetting pairing records. The user supplied Apple's SDK and configured signing credentials locally. The subsequent authorized install used those credentials through xtool for provisioning/signing; no secret material was displayed or committed and no revocation was approved. Follow [LINUX_SETUP.md](LINUX_SETUP.md) or [MAC_SETUP.md](MAC_SETUP.md) and record real app-runtime results before daily use.
