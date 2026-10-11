@@ -2,7 +2,7 @@
 
 ## Readiness
 
-**Physical-install checkpoint, not a device-verified release.** The private Linux Swift 6.4/xtool 1.21 lane builds the real arm64 iPhone app with the user-supplied Xcode 27 slim SDK; full and repeated builds pass. The latest authorized USB deployment successfully provisioned, signed, installed and verified the automatic trusted-host-key Tailscale build (`02eaf97`) on an iPhone running iOS 26.6.2. Pairing and Developer Mode were verified first; no certificate-revocation prompt appeared. The user reports successful in-app Tailscale sign-in and adding a machine, but connecting fails with `NIOCore.ChannelError error 6`. The error-masking fix below is built, not installed. A successful SSH/bridge session, app-hosted tests, Mac/Xcode validation, rendering and actual permission compatibility remain unverified.
+**Physical-install checkpoint, not a device-verified release.** The private Linux Swift 6.4/xtool 1.21 lane builds the real arm64 iPhone app with the user-supplied Xcode 27 slim SDK; full and repeated builds pass. The latest authorized USB deployment successfully provisioned, signed, installed and verified SSH exec-error fix `9c45770`, including the automatic trusted-host-key Tailscale integration, on an iPhone running iOS 26.6.2. Pairing and Developer Mode were verified first; no certificate-revocation prompt appeared. The user reports successful in-app Tailscale sign-in and adding a machine on the prior build, followed by `NIOCore.ChannelError error 6`. The installed fix below still needs a manual retry on the retained machine. A successful SSH/bridge session, app-hosted tests, Mac/Xcode validation, rendering and actual permission compatibility remain unverified.
 
 ## Approved scope
 
@@ -28,7 +28,7 @@ The user requested installation. Pairing and Developer Mode were validated on th
 
 The user subsequently reports completing Tailscale sign-in and adding a machine. Connecting fails with the channel error investigated below. Do not reset sign-in or saved machines to diagnose it. Retention of older saved-machine state, a successful iPhone SSH/bridge session, node suspend/resume and native appearance still need verification. The substituted inline native finish review is **recapture**, not a visual verdict; there are no native screenshots. Existing visual-system tokens are preserved, and pre-existing sidecar drift is not repaired. See [embedded client](TAILSCALE_CLIENT.md) and [device checklist](TESTING.md#tailscale-ssh-setup--required-native-verification).
 
-## SSH command error masking — built, not installed
+## SSH command error masking — installed
 
 Fix checkpoint `9c45770` reproduces `ChannelError.alreadyClosed`, bridged as `NIOCore.ChannelError error 6`, when a synthetic remote command exits 127 before exec cleanup. The same failure occurs over adopted AF_UNIX socketpairs and ordinary TCP. A control using Citadel's command stream directly returns the original exit 127: `withExec`'s second close, not Tailscale routing, masks that error. This identifies a reproducible client defect; it does **not** establish why the user's real host command exited or whether its bridge is installed.
 
@@ -36,7 +36,9 @@ The unchanged Citadel pin now has a second exact, checked-in `citadel-exec-close
 
 Verification: the full actual-transport regression passes, including **ten exec lifecycle cases** (stdin/stdout, exits 127/1/0 and callback failure on both transports); ten repeated socketpair suites pass another **fifty cases**. Twenty-six Core tests and six metadata tests pass. Clean/repeated dependency preparation and upgrading an exact older event-loop-only cache reproduce both patches. Initial, source-change and repeat arm64 iPhone compile/link/package builds pass: `xtool-build-20261011T181503Z.log`, `xtool-build-20261011T182628Z.log`, `xtool-build-20261011T182653Z.log`, under `ios/TestResults/`. Swift harness checks and ShellCheck remain unavailable, not passes.
 
-Private repro/control evidence: `ssh-exec-channel-error-minimal-red.log`, `ssh-exec-channel-error-tcp-red.log`, `ssh-exec-channel-error-stream-control.log`; final suite: `ssh-exec-channel-error-final.log`; Core: `core-ssh-exec-fix.log`. The unsigned update is at `ios/xtool/PiMobile.app`. **No new device deployment, host command, installation, session/policy change or saved-state reset was performed.** A further in-place deployment needs explicit authorization. The installed app remains `02eaf97`; real-host diagnosis and a successful connection remain open.
+Private repro/control evidence: `ssh-exec-channel-error-minimal-red.log`, `ssh-exec-channel-error-tcp-red.log`, `ssh-exec-channel-error-stream-control.log`; final suite: `ssh-exec-channel-error-final.log`; Core: `core-ssh-exec-fix.log`. The unsigned app remains at `ios/xtool/PiMobile.app`.
+
+The user explicitly authorized a further **in-place** update on the same selected iPhone. Pairing validated, Developer Mode was enabled, and model/iOS confirmed as iPhone18,1 / 26.6.2. `tools/deploy-ios-linux.sh` ran **once** for the existing fix artifact: provisioning, signing, installation and verification completed with `Successfully installed!`. No revocation prompt/consent, uninstall, saved-machine/Tailscale/Keychain reset, host command, policy/session change or app launch was performed. Installed source is now `9c45770`; intervening `f31a122` changes documentation only. Private tool-result summary: `ios/TestResults/ssh-exec-device-install-20261011.md` (not an installer transcript). Open Pi Mobile and retry the retained machine; data retention, the real host-side reason and a successful connection still need runtime confirmation.
 
 ## SSH save/launch crash fix
 
