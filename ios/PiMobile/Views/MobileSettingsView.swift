@@ -3,20 +3,37 @@ import SwiftUI
 struct MobileSettingsView: View {
     @EnvironmentObject private var dictation: ParakeetDictation
 
+    private var dictationStateTitle: String {
+        switch dictation.state {
+        case "notDownloaded": return "Not set up"
+        case "loading": return "Preparing model"
+        case "ready": return "Ready"
+        case "recording": return "Recording"
+        case "transcribing": return "Transcribing"
+        default: return "Needs attention"
+        }
+    }
+
     var body: some View {
         Form {
-            Section("On-device dictation") {
+            Section {
                 LabeledContent("Engine", value: "Parakeet TDT v3")
-                LabeledContent("State", value: dictation.state)
+                LabeledContent("State", value: dictationStateTitle)
                 Text("Audio stays on this iPhone. The first setup downloads the Core ML model; later transcription works offline.")
                     .foregroundStyle(.secondary)
                 if !["ready", "recording", "transcribing"].contains(dictation.state) {
                     Button(dictation.state == "loading" ? "Preparing Parakeet…" : "Download and prepare Parakeet") {
                         Task { do { try await dictation.prepare() } catch { /* The service publishes the actionable error. */ } }
-                    }.disabled(dictation.state == "loading")
+                    }
+                    .mobileGlassButtonStyle(prominent: true)
+                    .buttonBorderShape(.capsule)
+                    .frame(minHeight: 44)
+                    .disabled(dictation.state == "loading")
                 }
                 if dictation.state == "loading" { ProgressView().accessibilityLabel("Preparing Parakeet model") }
                 if let error = dictation.errorMessage { Text(error).foregroundStyle(.red) }
+            } header: {
+                Label("On-device dictation", systemImage: "waveform")
             }
             Section("VoxType behavior") {
                 Text("16 kHz audio · up to five minutes per recording")
@@ -33,7 +50,10 @@ struct MobileSettingsView: View {
                 Text("Native SSH companion for Herdr and Pi. Requires Tailscale and the host bridge on each machine.")
                     .foregroundStyle(.secondary)
             }
-        }.navigationTitle("Settings")
+        }
+        .listSectionSpacing(24)
+        .navigationTitle("Settings")
+        .navigationBarTitleDisplayMode(.large)
     }
 }
 

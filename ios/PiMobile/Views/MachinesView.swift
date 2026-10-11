@@ -13,27 +13,37 @@ struct MachinesView: View {
                 NavigationLink {
                     MachineBrowserView(profile: profile, connection: sessions.connection(for: profile.id))
                 } label: {
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text(profile.name).font(.headline)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label(profile.name, systemImage: "server.rack").font(.headline)
                         Text("\(profile.username)@\(profile.hostname)")
-                            .font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
+                            .font(.subheadline).foregroundStyle(.secondary)
                         if let error = sessions.machineErrors[profile.id] {
-                            Text(error).font(.caption).foregroundStyle(.secondary)
+                            Label(error, systemImage: "exclamationmark.circle")
+                                .font(.caption).foregroundStyle(.secondary)
                         }
-                    }.padding(.vertical, 4)
+                    }.padding(.vertical, 8)
                 }
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                     Button("Edit", systemImage: "pencil") { editing = profile }.tint(.blue)
                 }
             }
         }
+        .listStyle(.insetGrouped)
         .overlay {
             if machines.machines.isEmpty {
-                ContentUnavailableView("No machines yet", systemImage: "server.rack",
-                    description: Text("Add a Tailscale host, its SSH credential and verified host public key."))
+                ContentUnavailableView {
+                    Label("No machines yet", systemImage: "server.rack")
+                } description: {
+                    Text("Add a Tailscale host, its SSH credential and verified host public key.")
+                } actions: {
+                    Button("Add machine", systemImage: "plus") { adding = true }
+                        .mobileGlassButtonStyle(prominent: true)
+                        .controlSize(.large).buttonBorderShape(.capsule)
+                }
             }
         }
         .navigationTitle("Machines")
+        .navigationBarTitleDisplayMode(.large)
         .toolbar { Button("Add machine", systemImage: "plus") { adding = true } }
         .sheet(isPresented: $adding) { MachineEditorView(profile: nil) }
         .sheet(item: $editing) { MachineEditorView(profile: $0) }
@@ -82,7 +92,10 @@ struct MachineBrowserView: View {
                 }
             }
         }
+        .listStyle(.insetGrouped)
+        .listSectionSpacing(24)
         .navigationTitle(profile.name)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar { Button("Edit", systemImage: "pencil") { editing = true } }
         .task { await sessions.refreshMachine(profile) }
         .sheet(isPresented: $editing) { MachineEditorView(profile: profile) }
@@ -94,6 +107,7 @@ struct TabPanesView: View {
     let tab: HerdrTab
     @ObservedObject var connection: SSHBridgeConnection
     @EnvironmentObject private var sessions: MobileSessionHub
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         List {
@@ -104,18 +118,19 @@ struct TabPanesView: View {
                 NavigationLink {
                     PaneDetailView(profile: profile, pane: pane, connection: connection)
                 } label: {
-                    VStack(alignment: .leading, spacing: 5) {
-                        HStack {
-                            Text(pane.title.isEmpty ? "Terminal" : pane.title).font(.headline)
-                            Spacer()
-                            if pane.agent != nil {
-                                AgentStatusLabel(state: connection.state == "connected" ? pane.state : "offline")
-                            }
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(pane.title.isEmpty ? "Terminal" : pane.title).font(.headline)
+                        if pane.agent != nil {
+                            AgentStatusLabel(state: connection.state == "connected" ? pane.state : "offline")
                         }
-                        Text(pane.cwd).font(.subheadline).foregroundStyle(.secondary).lineLimit(2)
-                    }.padding(.vertical, 4)
+                        Text(pane.cwd).font(.subheadline).foregroundStyle(.secondary)
+                            .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                    }.padding(.vertical, 8)
                 }
             }
-        }.navigationTitle(tab.name)
+        }
+        .listStyle(.insetGrouped)
+        .navigationTitle(tab.name)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }

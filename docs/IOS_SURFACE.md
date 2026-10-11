@@ -16,6 +16,17 @@ FORM: User-pinned native iOS activity directory with Machines and Settings as pe
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance.
 
+## Liquid Glass refresh
+
+The user requested native Liquid Glass, a prettier interface and a more magical feel. This is a material and craft refresh of the same Operate surface, not a new navigation model or product identity. The existing user-pinned native direction and code-first build path remain authoritative.
+
+- Keep system navigation, tab bars, forms, back gestures, San Francisco, semantic colors and the blue interactive tint.
+- Use Apple's iOS 26 glass APIs on floating controls, with native material/button fallbacks on iOS 17–25. Directory rows, transcript content and permission explanations stay nonglass and legible.
+- Give agent status a text-and-symbol capsule and generous row rhythm; stack status and title at accessibility text sizes.
+- Signature interaction: the editable composer floats above the conversation beside a separate glass Send control. Dictation stays editable and explicit; send feedback follows the host's acknowledgment, never an optimistic approval or delivery claim.
+- Keep motion brief and state-driven. Honor Reduce Motion, Reduce Transparency and increased contrast. Never animate streaming text or add ambient effect loops.
+- Preserve cached/offline visibility, exact pane destinations, terminal control/takeover confirmations, permission action labels, grant widths and every host-owned decision.
+
 ## Verification state
 
-No native render is available on this Linux host. Simulator/device screenshots and independent finish review remain blocked on the Mac build. Source-level design documentation must not be presented as visual proof.
+No native render has been captured for this refresh. Source-level documentation and arm64 compilation must not be presented as visual proof. Native light/dark, keyboard, landscape and accessibility-size inspection remain required on the Mac Simulator or physical iPhone.
