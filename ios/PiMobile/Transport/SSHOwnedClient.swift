@@ -30,8 +30,10 @@ struct SSHOwnedClient {
             }.get()
             // NIOSSH consumes channelInactive; its raw close future must also finish a pending login.
             channel.closeFuture.whenComplete { _ in readiness.channelClosed() }
+            let loginFailure: SSHBridgeError = configuration.profile.authentication == "tailscale"
+                ? .tailscaleSSHUnavailable : .requestDeadline
             let deadline = channel.eventLoop.scheduleTask(in: .seconds(15)) {
-                readiness.expire(on: channel)
+                readiness.expire(on: channel, error: loginFailure)
             }
             defer { deadline.cancel() }
             try await channel.setOption(ChannelOptions.autoRead, value: true).get()
@@ -39,6 +41,11 @@ struct SSHOwnedClient {
             return client
         } catch {
             channel.close(promise: nil)
+            // Citadel consumes its custom delegate after one offer, then emits this generic failure.
+            if configuration.profile.authentication == "tailscale",
+               case SSHClientError.allAuthenticationOptionsFailed = error {
+                throw SSHBridgeError.tailscaleSSHUnavailable
+            }
             throw error
         }
     }
@@ -76,9 +83,9 @@ private final class SSHAuthenticationReadiness: ChannelInboundHandler, @unchecke
         fail(SSHBridgeError.disconnected)
     }
 
-    func expire(on channel: Channel) {
+    func expire(on channel: Channel, error: SSHBridgeError) {
         guard !completed else { return }
-        fail(SSHBridgeError.requestDeadline)
+        fail(error)
         channel.close(promise: nil)
     }
 

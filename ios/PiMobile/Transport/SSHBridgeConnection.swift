@@ -39,8 +39,8 @@ public final class SSHBridgeConnection: ObservableObject {
             }
     }
 
-    /// Connects once with a pinned host key and explicit credential supplied by the native Keychain owner.
-    public func connect(profile: MachineProfile, secret: String) async throws {
+    /// Connects once with a pinned host key; only legacy SSH needs a secret from the native Keychain owner.
+    public func connect(profile: MachineProfile, secret: String? = nil) async throws {
         disconnect()
         lastError = nil
         guard UIApplication.shared.applicationState != .background else { throw SSHBridgeError.disconnected }

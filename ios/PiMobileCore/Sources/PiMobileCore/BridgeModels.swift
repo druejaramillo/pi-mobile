@@ -42,7 +42,7 @@ public enum BridgeJSON: Codable, Sendable, Equatable {
     }
 }
 
-/// SSH connection settings persist separately from secrets kept in Keychain.
+/// Tailscale SSH connection settings need no login secret; legacy SSH secrets remain in Keychain.
 public struct MachineProfile: Codable, Identifiable, Sendable, Equatable {
     public var id: UUID
     public var name: String
@@ -54,10 +54,13 @@ public struct MachineProfile: Codable, Identifiable, Sendable, Equatable {
     public var hostPublicKey: String
     public var authentication: String
 
+    /// Only legacy SSH profiles require a Keychain credential; Tailscale SSH uses the tailnet identity.
+    public var requiresSSHCredential: Bool { authentication != "tailscale" }
+
     public init(id: UUID = UUID(), name: String, hostname: String, port: Int = 22,
                 username: String, herdrSession: String = "default",
                 bridgePath: String = ".local/share/pi-mobile/host/bridge-cli.mjs",
-                hostPublicKey: String = "", authentication: String = "key") {
+                hostPublicKey: String = "", authentication: String = "tailscale") {
         self.id = id; self.name = name; self.hostname = hostname; self.port = port
         self.username = username; self.herdrSession = herdrSession; self.bridgePath = bridgePath
         self.hostPublicKey = hostPublicKey; self.authentication = authentication

@@ -9,6 +9,7 @@ import PiMobileCore
 public enum SSHBridgeError: Error, LocalizedError {
     case invalidProfile(String)
     case invalidSecret
+    case tailscaleSSHUnavailable
     case disconnected
     case requestDeadline
     case protocolViolation(String)
@@ -19,6 +20,7 @@ public enum SSHBridgeError: Error, LocalizedError {
         switch self {
         case .invalidProfile(let reason): return "SSH profile invalid: \(reason)"
         case .invalidSecret: return "SSH secret invalid: provide a password or an OpenSSH Ed25519 private key with its passphrase."
+        case .tailscaleSSHUnavailable: return "Tailscale SSH login failed: enable SSH on the host and allow this username with an accept rule in the tailnet policy. Interactive check-mode sign-in is not supported."
         case .disconnected: return "SSH bridge disconnected: command delivery may be uncertain; refresh before acting again."
         case .requestDeadline: return "SSH bridge deadline exceeded: command delivery may be uncertain; do not replay it automatically."
         case .protocolViolation(let reason): return "SSH bridge protocol invalid: \(reason)"
@@ -98,13 +100,18 @@ private struct SSHCredentialBundle: Decodable {
 }
 
 extension SSHBridgeConfiguration {
-    func authenticationMethod(secret: String) throws -> SSHAuthenticationMethod {
-        guard !secret.isEmpty, secret.utf8.count <= 128 * 1024 else { throw SSHBridgeError.invalidSecret }
+    func authenticationMethod(secret: String? = nil) throws -> SSHAuthenticationMethod {
+        if profile.authentication == "tailscale" {
+            // The tailnet already authenticates this device; never offer a saved key or password.
+            return .custom(SSHTailscaleAuthentication(username: profile.username))
+        }
+        guard ["key", "password", "key+password"].contains(profile.authentication) else {
+            throw SSHBridgeError.invalidProfile("authentication must be tailscale, key, password or key+password")
+        }
+        guard let secret, !secret.isEmpty,
+              secret.utf8.count <= MachineKeyCredential.maximumBytes else { throw SSHBridgeError.invalidSecret }
         if profile.authentication == "password" {
             return .passwordBased(username: profile.username, password: secret)
-        }
-        guard profile.authentication == "key" || profile.authentication == "key+password" else {
-            throw SSHBridgeError.invalidProfile("authentication must be key, password or key+password")
         }
         do {
             let keyText: String
@@ -118,12 +125,34 @@ extension SSHBridgeConfiguration {
                 keyText = key; passphrase = bundle.passphrase; password = bundle.password
             }
             let key = try Curve25519.Signing.PrivateKey(
-                sshEd25519: keyText, decryptionKey: passphrase.map { Data($0.utf8) }
+                sshEd25519: try MachineKeyCredential(privateKey: keyText).privateKey,
+                decryptionKey: passphrase.map { Data($0.utf8) }
             )
             if profile.authentication == "key" { return .ed25519(username: profile.username, privateKey: key) }
             guard let password, !password.isEmpty else { throw SSHBridgeError.invalidSecret }
             return .custom(SSHKeyPasswordAuthentication(username: profile.username, privateKey: key, password: password))
         } catch { throw SSHBridgeError.invalidSecret }
+    }
+}
+
+/// Keyless Tailscale SSH offers `none` once; rejection never falls back to a key or password.
+private final class SSHTailscaleAuthentication: NIOSSHClientUserAuthenticationDelegate {
+    private let username: String
+    private var offeredIdentity = false
+
+    init(username: String) { self.username = username }
+
+    func nextAuthenticationType(availableMethods: NIOSSHAvailableUserAuthenticationMethods,
+                                nextChallengePromise: EventLoopPromise<NIOSSHUserAuthenticationOffer?>) {
+        guard !offeredIdentity else {
+            nextChallengePromise.fail(SSHBridgeError.tailscaleSSHUnavailable)
+            return
+        }
+        offeredIdentity = true
+        // `none` is valid before the server advertises authentication methods, including an empty set.
+        nextChallengePromise.succeed(NIOSSHUserAuthenticationOffer(
+            username: username, serviceName: "", offer: .none
+        ))
     }
 }
 

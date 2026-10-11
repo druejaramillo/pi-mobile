@@ -34,6 +34,20 @@ final class SSHBridgeSessionTests: XCTestCase {
     }
 
     @MainActor
+    func testKeylessTailscaleStillRequiresAVerifiedHostPin() async {
+        let connection = SSHBridgeConnection()
+        let profile = MachineProfile(name: "Keyless test only", hostname: "127.0.0.1", username: "test")
+        do {
+            try await connection.connect(profile: profile)
+            XCTFail("Keyless login must never bypass host identity verification.")
+        } catch SSHBridgeError.invalidProfile(_) {
+            XCTAssertEqual(connection.state, "failed")
+            XCTAssertNil(connection.agent)
+        } catch { XCTFail("Unexpected keyless profile error: \(error)") }
+        connection.disconnect()
+    }
+
+    @MainActor
     func testUnadvertisedReviewCannotOpenForwarding() async throws {
         let connection = SSHBridgeConnection()
         let review = try JSONDecoder().decode(PlannotatorReview.self,

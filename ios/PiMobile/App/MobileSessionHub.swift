@@ -33,7 +33,9 @@ final class MobileSessionHub: ObservableObject {
         do {
             let client = connection(for: profile.id)
             if client.state != "connected" {
-                let secret = try MachineSecretStore.readSecret(machineId: profile.id)
+                // Keyless Tailscale profiles never read Keychain, even if an old credential remains saved.
+                let secret = try profile.requiresSSHCredential
+                    ? MachineSecretStore.readSecret(machineId: profile.id) : nil
                 try await client.connect(profile: profile, secret: secret)
             }
             let response = try await client.request(method: "snapshot", params: .object([:]))
