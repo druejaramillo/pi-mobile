@@ -120,7 +120,11 @@ struct DictationButton: View {
         .sheet(isPresented: $setup) {
             NavigationStack {
                 MobileSettingsView()
-                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { setup = false } } }
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") { setup = false }.mobileGlassHeaderControl()
+                        }.mobileGlassHeaderItem()
+                    }
             }
         }
     }

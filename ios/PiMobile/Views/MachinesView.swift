@@ -44,7 +44,12 @@ struct MachinesView: View {
         }
         .navigationTitle("Machines")
         .navigationBarTitleDisplayMode(.large)
-        .toolbar { Button("Add machine", systemImage: "plus") { adding = true } }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Add machine", systemImage: "plus") { adding = true }
+                    .mobileGlassHeaderControl(prominent: true, symbolOnly: true)
+            }.mobileGlassHeaderItem()
+        }
         .sheet(isPresented: $adding) { MachineEditorView(profile: nil) }
         .sheet(item: $editing) { MachineEditorView(profile: $0) }
     }
@@ -64,11 +69,13 @@ struct MachineBrowserView: View {
                     Spacer()
                     if sessions.refreshing.contains(profile.id) { ProgressView() }
                     Button("Refresh") { Task { await sessions.refreshMachine(profile) } }
-                        .disabled(sessions.refreshing.contains(profile.id))
+                        .mobileGlassButtonStyle().buttonBorderShape(.capsule)
+                        .frame(minHeight: 44).disabled(sessions.refreshing.contains(profile.id))
                 }
                 if let error = sessions.machineErrors[profile.id] {
                     Text(error).foregroundStyle(.secondary)
                     Button("Edit connection") { editing = true }
+                        .mobileGlassButtonStyle().buttonBorderShape(.capsule).frame(minHeight: 44)
                 }
             }
             if let topology = sessions.cachedTopology(for: profile.id) {
@@ -96,7 +103,12 @@ struct MachineBrowserView: View {
         .listSectionSpacing(24)
         .navigationTitle(profile.name)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar { Button("Edit", systemImage: "pencil") { editing = true } }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Edit", systemImage: "pencil") { editing = true }
+                    .mobileGlassHeaderControl(symbolOnly: true)
+            }.mobileGlassHeaderItem()
+        }
         .task { await sessions.refreshMachine(profile) }
         .sheet(isPresented: $editing) { MachineEditorView(profile: profile) }
     }

@@ -61,9 +61,12 @@ struct MachineEditorView: View {
                                 guard let text = values.first else { return }
                                 acceptPrivateKey(text)
                             }
+                            .mobileGlassButtonStyle().buttonBorderShape(.capsule)
+                            .frame(minWidth: 44, minHeight: 44)
                             .accessibilityLabel("Paste OpenSSH private key")
                         }
                         Button("Import OpenSSH private key", systemImage: "square.and.arrow.down") { importingKey = true }
+                            .mobileGlassButtonStyle().buttonBorderShape(.capsule).frame(minHeight: 44)
                         if !secret.isEmpty {
                             Label("Key ready to save", systemImage: "key.fill")
                             VStack(alignment: .leading, spacing: 8) {
@@ -75,6 +78,8 @@ struct MachineEditorView: View {
                                     guard authentication == "key", let passphrase = values.first else { return }
                                     keyPassphrase = passphrase
                                 }
+                                .mobileGlassButtonStyle().buttonBorderShape(.capsule)
+                                .frame(minWidth: 44, minHeight: 44)
                                 .accessibilityLabel("Paste key passphrase")
                             }
                         }
@@ -91,14 +96,19 @@ struct MachineEditorView: View {
                 if profile != nil {
                     Section {
                         Button("Remove saved machine", role: .destructive) { confirmRemove = true }
+                            .mobileGlassButtonStyle().buttonBorderShape(.capsule).frame(minHeight: 44)
                     } footer: { Text("Removes this connection and its credential only. Host sessions keep running.") }
                 }
             }
             .navigationTitle(profile == nil ? "Add machine" : "Edit machine")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Save") { saveMachine() } }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }.mobileGlassHeaderControl()
+                }.mobileGlassHeaderItem()
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") { saveMachine() }.mobileGlassHeaderControl(prominent: true)
+                }.mobileGlassHeaderItem()
             }
             .onAppear {
                 guard let profile else { return }

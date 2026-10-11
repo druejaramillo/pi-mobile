@@ -85,7 +85,8 @@ struct GlobalAgentsView: View {
                                     ProgressView().accessibilityLabel("Checking \(profile.name)")
                                 } else if sessions.machineErrors[profile.id] != nil {
                                     Button("Edit") { editingMachine = profile }
-                                        .buttonStyle(.borderless).frame(minWidth: 44, minHeight: 44)
+                                        .mobileGlassButtonStyle().buttonBorderShape(.capsule)
+                                        .frame(minWidth: 44, minHeight: 44)
                                 } else {
                                     let connected = sessions.connection(for: profile.id).state == "connected"
                                     Image(systemName: connected ? "checkmark.circle.fill" : "network.slash")
@@ -108,11 +109,14 @@ struct GlobalAgentsView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Refresh", systemImage: "arrow.clockwise") {
                     Task { await sessions.refreshAll(machines.machines) }
-                }.disabled(!sessions.refreshing.isEmpty)
-            }
+                }
+                .mobileGlassHeaderControl(symbolOnly: true)
+                .disabled(!sessions.refreshing.isEmpty)
+            }.mobileGlassHeaderItem()
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Add machine", systemImage: "plus") { addingMachine = true }
-            }
+                    .mobileGlassHeaderControl(prominent: true, symbolOnly: true)
+            }.mobileGlassHeaderItem()
         }
         .task { await sessions.refreshAll(machines.machines) }
         .sheet(isPresented: $addingMachine) { MachineEditorView(profile: nil) }

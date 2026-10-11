@@ -65,8 +65,8 @@ struct AgentConversationView: View {
                     Label("Follow output", systemImage: "arrow.down.to.line")
                         .labelStyle(.iconOnly)
                 }
-                .toggleStyle(.button).buttonStyle(.borderless)
-                .frame(minWidth: 44, minHeight: 44)
+                .toggleStyle(.button)
+                .mobileGlassHeaderControl(symbolOnly: true)
                 .accessibilityHint("Keep the latest response in view")
             }
             .padding(.horizontal, 20).padding(.vertical, 4)
@@ -124,7 +124,11 @@ struct AgentConversationView: View {
             }
             .searchable(text: $commandSearch, prompt: "Commands and skills")
             .navigationTitle("Pi commands")
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Done") { choosingCommand = false } } }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") { choosingCommand = false }.mobileGlassHeaderControl()
+                }.mobileGlassHeaderItem()
+            }
         }
     }
 

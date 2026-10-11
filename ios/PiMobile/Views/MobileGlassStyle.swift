@@ -19,6 +19,31 @@ extension View {
         }
     }
 
+    /// Header actions use their own glass shape; native back navigation stays system-owned.
+    @ViewBuilder
+    func mobileGlassHeaderControl(prominent: Bool = false, symbolOnly: Bool = false) -> some View {
+        if symbolOnly {
+            labelStyle(.iconOnly)
+                .mobileGlassButtonStyle(prominent: prominent)
+                .buttonBorderShape(.circle).controlSize(.regular)
+                .frame(minWidth: 44, minHeight: 44)
+        } else {
+            mobileGlassButtonStyle(prominent: prominent)
+                .buttonBorderShape(.capsule).controlSize(.regular)
+                .frame(minHeight: 44)
+        }
+    }
+
+    /// Native floating tabs contract on scroll, rather than becoming a custom navigation dock.
+    @ViewBuilder
+    func mobileGlassTabBar() -> some View {
+        if #available(iOS 26.0, *) {
+            tabBarMinimizeBehavior(.onScrollDown)
+        } else {
+            self
+        }
+    }
+
     /// Registers floating bottom controls with the iOS 26 scroll edge and keyboard safe area.
     @ViewBuilder
     func mobileBottomBar(@ViewBuilder content: () -> some View) -> some View {
@@ -26,6 +51,18 @@ extension View {
             safeAreaBar(edge: .bottom, spacing: 0, content: content)
         } else {
             safeAreaInset(edge: .bottom, spacing: 0, content: content)
+        }
+    }
+}
+
+/// Explicit glass header buttons must not acquire a second shared toolbar glass background.
+extension ToolbarContent {
+    @ToolbarContentBuilder
+    func mobileGlassHeaderItem() -> some ToolbarContent {
+        if #available(iOS 26.0, *) {
+            sharedBackgroundVisibility(.hidden)
+        } else {
+            self
         }
     }
 }

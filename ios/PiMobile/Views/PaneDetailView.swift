@@ -30,10 +30,8 @@ struct PaneDetailView: View {
     var body: some View {
         VStack(spacing: 0) {
             if currentPane.agent == "pi" {
-                Picker("Pane view", selection: $surface) {
-                    Text("Agent").tag("Agent")
-                    Text("Terminal").tag("Terminal")
-                }.pickerStyle(.segmented).padding(.horizontal, 20).padding(.vertical, 8)
+                MobilePaneSurfacePicker(selection: $surface)
+                    .padding(.horizontal, 20).padding(.vertical, 8)
             }
             if connection.state != "connected" {
                 HStack {
@@ -51,7 +49,7 @@ struct PaneDetailView: View {
                     Text(errorMessage).font(.footnote).textSelection(.enabled)
                     Spacer()
                     Button("Dismiss error", systemImage: "xmark") { self.errorMessage = nil }
-                        .labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44)
+                        .mobileGlassHeaderControl(symbolOnly: true)
                 }.padding(.horizontal, 20).padding(.vertical, 8)
                     .background(Color(uiColor: .secondarySystemBackground))
             }
@@ -88,13 +86,16 @@ struct PaneDetailView: View {
                             Button("Open review") { Task { await openReview(review) } }
                         }
                     } label: { Label("Reviews", systemImage: "doc.text.magnifyingglass") }
+                    .menuStyle(.button)
+                    .mobileGlassHeaderControl(symbolOnly: true)
                     .disabled(openingReview || connection.state != "connected")
-                }
+                }.mobileGlassHeaderItem()
             }
             if agent?.status == "working" {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Stop agent", systemImage: "stop.circle") { confirmAbort = true }
-                }
+                        .mobileGlassHeaderControl(symbolOnly: true).tint(.red)
+                }.mobileGlassHeaderItem()
             }
         }
         .task {
@@ -157,24 +158,26 @@ struct PaneDetailView: View {
                     .font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 if terminalWritable {
-                    Button("Release") {
+                    Button {
                         Task {
                             _ = try? await connection.request(method: "terminal.detach", params: .object([:]))
                             terminalWritable = false; attachedTerminal = false
                             await attachTerminal(control: false, takeover: false)
                         }
-                    }
+                    } label: { Text("Release").frame(minHeight: 44) }
                 } else {
                     if controlAttemptFailed {
-                        Button("Take over…") { confirmTakeover = true }
+                        Button { confirmTakeover = true } label: { Text("Take over…").frame(minHeight: 44) }
                             .disabled(connection.state != "connected" || attaching)
                     } else if attachedTerminal {
-                        Button("Take control") { Task { await attachTerminal(control: true, takeover: false) } }
-                            .disabled(connection.state != "connected" || attaching)
+                        Button { Task { await attachTerminal(control: true, takeover: false) } } label: {
+                            Text("Take control").frame(minHeight: 44)
+                        }.disabled(connection.state != "connected" || attaching)
                     }
                     if !attachedTerminal {
-                        Button("Observe") { Task { await attachTerminal(control: false, takeover: false) } }
-                            .disabled(connection.state != "connected" || attaching)
+                        Button { Task { await attachTerminal(control: false, takeover: false) } } label: {
+                            Text("Observe").frame(minHeight: 44)
+                        }.disabled(connection.state != "connected" || attaching)
                     }
                 }
             }
@@ -286,7 +289,11 @@ private struct ReviewSheet: View {
         NavigationStack {
             PlannotatorReviewView(url: presentation.tunnel.url)
                 .navigationTitle("Plannotator").navigationBarTitleDisplayMode(.inline)
-                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Back to agent") { dismiss() } } }
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Back to agent") { dismiss() }.mobileGlassHeaderControl()
+                    }.mobileGlassHeaderItem()
+                }
         }.onDisappear { presentation.tunnel.close() }
     }
 }
