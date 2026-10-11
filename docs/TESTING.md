@@ -64,6 +64,19 @@ Eighteen XCTest methods cover the public SSH facade's disconnected/invalid-pin/u
 
 **The eighteen app-hosted tests have only had source grammar/project-YAML checks here.** Their compilation/execution and Xcode project generation remain unrun; do not treat the passing Core package as an app-test pass. xtool's Linux lane does not run the iOS Simulator.
 
+## Machine credential paste — required native verification
+
+The Linux lane compiles the real SwiftUI paste controls but cannot exercise iOS clipboard interaction. On a fresh Simulator or iPhone, use disposable test keys and verify:
+
+- **Private key → Paste** accepts the complete OpenSSH text, including CRLF line endings; file import remains available. Only “Key ready to save” appears, never the private key itself.
+- The passphrase row's **Paste** fills its secure field. Leading/trailing whitespace and Unicode are preserved; no secret appears in errors or machine settings.
+- Pasting a public key, truncated key or oversized input shows a recoverable error without replacing an already-ready key. A valid retry clears the error.
+- Replacing a key clears its prior passphrase. Changing authentication clears both draft values; editing without a replacement retains the saved credential.
+- Save, reopen and connect with a disposable encrypted Ed25519 key to verify the actual Keychain/SSH path. Cancel leaves the saved credential unchanged.
+- Inspect both appearances, large Dynamic Type and VoiceOver; the Paste controls have distinct private-key/passphrase accessibility labels.
+
+These interaction and connected-path checks remain **unrun**; the Core tests and cross-build are not substitutes.
+
 ## Still outside automated proof
 
 - Connected native SSH correlation/deadlines/cancellation, host-key rejection against an actual server, password/encrypted-key authentication and foreground/background reconnect.

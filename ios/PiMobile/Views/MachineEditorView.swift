@@ -56,11 +56,27 @@ struct MachineEditorView: View {
                         Text("Password").tag("password")
                     }
                     if authentication == "key" {
+                        LabeledContent("Private key") {
+                            PasteButton(payloadType: String.self) { values in
+                                guard let text = values.first else { return }
+                                acceptPrivateKey(text)
+                            }
+                            .accessibilityLabel("Paste OpenSSH private key")
+                        }
                         Button("Import OpenSSH private key", systemImage: "square.and.arrow.down") { importingKey = true }
                         if !secret.isEmpty {
                             Label("Key ready to save", systemImage: "key.fill")
-                            SecureField("Key passphrase (if encrypted)", text: $keyPassphrase)
-                                .textContentType(.password)
+                            VStack(alignment: .leading, spacing: 8) {
+                                SecureField("Key passphrase (if encrypted)", text: $keyPassphrase)
+                                    .textContentType(.password)
+                                    .textInputAutocapitalization(.never).autocorrectionDisabled()
+                                    .frame(minHeight: 44)
+                                PasteButton(payloadType: String.self) { values in
+                                    guard authentication == "key", let passphrase = values.first else { return }
+                                    keyPassphrase = passphrase
+                                }
+                                .accessibilityLabel("Paste key passphrase")
+                            }
                         }
                     } else {
                         SecureField(profile == nil ? "SSH password" : "New password (optional)", text: $secret)
@@ -68,8 +84,8 @@ struct MachineEditorView: View {
                     }
                 } header: { Text("Device-only credential") } footer: {
                     Text(profile == nil
-                        ? "Stored in this iPhone's Keychain, not in machine settings or iCloud. OpenSSH Ed25519 keys are supported."
-                        : "Leave the credential unchanged to keep its existing Keychain item. Import a replacement when changing authentication type.")
+                        ? "Stored in this iPhone's Keychain, not in machine settings or iCloud. OpenSSH Ed25519 keys can be pasted or imported."
+                        : "Leave the credential unchanged to keep its existing Keychain item. Changing authentication requires a new key or password.")
                 }
                 if let error { Section { Text(error).foregroundStyle(.red) } }
                 if profile != nil {
@@ -99,7 +115,7 @@ struct MachineEditorView: View {
                     let values = try url.resourceValues(forKeys: [.fileSizeKey])
                     guard (values.fileSize ?? 0) <= MachineKeyCredential.maximumBytes else { throw MachineKeyCredentialError.tooLarge }
                     let imported = try String(contentsOf: url, encoding: .utf8)
-                    secret = try MachineKeyCredential(privateKey: imported).privateKey
+                    acceptPrivateKey(imported)
                 } catch { self.error = error.localizedDescription }
             }
             .confirmationDialog("Remove this machine from Pi Mobile?", isPresented: $confirmRemove, titleVisibility: .visible) {
@@ -113,6 +129,17 @@ struct MachineEditorView: View {
                 }
             }
         }
+    }
+
+    /// File import and system paste use the same validation without displaying the private key.
+    private func acceptPrivateKey(_ text: String) {
+        guard authentication == "key" else { return }
+        do {
+            let key = try MachineKeyCredential(privateKey: text)
+            if secret != key.privateKey { keyPassphrase = "" }
+            secret = key.privateKey
+            error = nil
+        } catch { self.error = error.localizedDescription }
     }
 
     private func saveMachine() {

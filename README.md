@@ -24,7 +24,7 @@ The launch **Agents** tab indexes existing agents across your machines, with sta
 ./tools/build-ios-linux.sh
 ```
 
-Follow [Linux setup](docs/LINUX_SETUP.md) for the Apple-provided SDK, private toolchain, signing and explicit USB deployment. Seven Core XCTest methods pass on this Linux machine, and full/repeated unsigned app builds succeed. The signed app is **installed on an iPhone**, but launch/runtime verification remains outstanding. The Mac build remains available.
+Follow [Linux setup](docs/LINUX_SETUP.md) for the Apple-provided SDK, private toolchain, signing and explicit USB deployment. Thirteen Core XCTest methods pass on this Linux machine, and full/repeated unsigned app builds succeed. The signed app is **installed on an iPhone**, but launch/runtime verification remains outstanding. The Mac build remains available.
 
 ## Layout
 
@@ -33,10 +33,16 @@ Follow [Linux setup](docs/LINUX_SETUP.md) for the Apple-provided SDK, private to
 - `tools/`: development and safe VoxType profile import utilities.
 - `docs/`: setup, compatibility and verification notes.
 
+## Tailscale and SSH credentials
+
+A Tailscale name/IP provides private networking, not automatic SSH login. [Tailscale SSH](https://tailscale.com/docs/features/tailscale-ssh) can authenticate without your own SSH keys when enabled on the host and allowed by its tailnet policy. Pi Mobile currently offers SSH key/password setup, not a keyless Tailscale SSH option.
+
+In Add/Edit machine, choose **SSH key** and use **Private key → Paste** or **Import OpenSSH private key**. Once the key is ready, type or **Paste** its passphrase in the secure passphrase row. Keys and passphrases stay in device-only Keychain; the private key is not displayed. A verified host public key is still required.
+
 ## Security boundaries
 
 SSH host keys are explicitly trusted; secrets belong in iOS Keychain, never Git. No public listener, cloud transcription or APNs. No automatic terminal takeover, approval, remote installation or host process restart. A phone disconnect stops only its own channels.
 
 ## Current verification
 
-**23 host protocol tests pass**, alongside TypeScript/JavaScript and importer checks. Seven Core XCTest methods compile and pass on Linux; eighteen app-hosted XCTest methods remain uncompiled/unrun; [testing instructions](docs/TESTING.md) describe exact coverage and limits. See [build status](docs/BUILD_STATUS.md) for exact checks, compatibility boundaries and unresolved gates. The Linux iOS compile/link/package pass is verified; Mac/Xcode validation and a physical iPhone pass remain required before calling this usable on-device. Compilation is not runtime proof.
+**23 host protocol tests pass**, alongside TypeScript/JavaScript and importer checks. Thirteen Core XCTest methods compile and pass on Linux; eighteen app-hosted XCTest methods remain uncompiled/unrun; [testing instructions](docs/TESTING.md) describe exact coverage and limits. See [build status](docs/BUILD_STATUS.md) for exact checks, compatibility boundaries and unresolved gates. The Linux iOS compile/link/package pass is verified; Mac/Xcode validation and a physical iPhone pass remain required before calling this usable on-device. Compilation is not runtime proof.
