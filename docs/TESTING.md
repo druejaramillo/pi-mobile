@@ -99,7 +99,7 @@ The Linux lane compiles the simplified native form but cannot prove its iPhone b
 - Inspect light/dark, largest Dynamic Type, VoiceOver and keyboard layout; public-key input, disclosure, Save/Cancel and migration/remove actions remain readable and reachable.
 - Relaunch with the saved profile, background/foreground and explicitly refresh: no crash, no secret lookup for keyless profiles and no mutation replay.
 
-These connected/device/visual checks remain **unrun**. Sixteen Core tests, the real loopback SSH regression and cross-build are not substitutes. No new device installation is performed by this setup simplification.
+These connected/device/visual checks remain **unrun**. Sixteen Core tests, the real loopback SSH regression and cross-build are not substitutes. The user subsequently authorized an in-place USB update of keyless build `440e66d`; installation and installer verification succeeded (`ios/TestResults/deploy-keyless-tailscale-20261011T090750Z.log`). No uninstall/data reset or launch verification was performed. Installation is not proof of the checks above.
 
 ## Liquid Glass — required native inspection
 

@@ -2,7 +2,7 @@
 
 ## Readiness
 
-**Physical-install checkpoint, not a device-verified release.** The private Linux Swift 6.4/xtool 1.21 lane builds the real arm64 iPhone app with the user-supplied Xcode 27 slim SDK; full and repeated builds pass. One deliberate USB deployment successfully provisioned, signed, installed and verified Pi Mobile on an iPhone running iOS 26.6.2. Pairing and Developer Mode were verified first; no certificate-revocation prompt appeared. App launch/runtime behavior, app-hosted tests, Mac/Xcode validation, rendering and actual permission compatibility remain unverified.
+**Physical-install checkpoint, not a device-verified release.** The private Linux Swift 6.4/xtool 1.21 lane builds the real arm64 iPhone app with the user-supplied Xcode 27 slim SDK; full and repeated builds pass. The latest authorized USB deployment successfully provisioned, signed, installed and verified the keyless Tailscale SSH build (`440e66d`) on an iPhone running iOS 26.6.2. Pairing and Developer Mode were verified first; no certificate-revocation prompt appeared. App launch/runtime behavior, app-hosted tests, Mac/Xcode validation, rendering and actual permission compatibility remain unverified.
 
 ## Approved scope
 
@@ -24,7 +24,7 @@ Five crash reports copied from the connected iPhone (kept on the device) show a 
 
 Both build lanes now prepare the unchanged Citadel revision with a checked-in patch that confines pipeline/session construction to the socket's event loop. Authentication readiness observes events before Citadel's consuming handler and observes the raw close future too. No profile, Keychain, host-key policy, Tailscale configuration or host agent is reset or changed.
 
-`tools/test-ssh-transport.sh` passes repeated successful logins/clean closes, wrong-password rejection, wrong-host-key rejection and raw socket teardown during stalled login. Thirteen Core tests and the real iPhone compile/link/package pass. Evidence is retained privately under `ios/TestResults/`; the fixture-only Linux `CDispatch` import is a compiler compatibility fix, not a runtime change. The corrected app still needs an authorized in-place update and a device launch/connection check with the existing saved machine before claiming the user's on-device crash loop is resolved.
+`tools/test-ssh-transport.sh` passes repeated successful logins/clean closes, wrong-password rejection, wrong-host-key rejection and raw socket teardown during stalled login. Thirteen Core tests and the real iPhone compile/link/package pass. Evidence is retained privately under `ios/TestResults/`; the fixture-only Linux `CDispatch` import is a compiler compatibility fix, not a runtime change. The corrected transport is included in the subsequently authorized in-place updates, including keyless build `440e66d`. A device launch/connection check with the existing saved machine is still required before claiming the user's on-device crash loop is resolved.
 
 ## Machine credential paste checkpoint (superseded)
 
@@ -38,7 +38,9 @@ Transport checkpoint `8608f70` adds SSH `none` authentication for new profiles a
 
 Tailscale SSH must be enabled on the host and permitted for the phone's identity/username. This implementation requires an SSH `accept` rule; interactive `check`-mode browser sign-in is **not supported**. Host configuration/policy is documented, never changed automatically. Legacy Keychain read/delete and SSH auth are retained for old machines; credential writes are removed.
 
-**Sixteen Core tests pass** (`ios/TestResults/core-tailscale-ssh.log`). The actual loopback transport passes repeated keyless logins, rejecting denied users/password-only SSH, no supplied-secret fallback, missing/mismatched host pins and the earlier crash regressions (`ssh-transport-regression.log`). The real arm64 iPhone app compiles/links/packages in initial and source-change confirmation builds (`xtool-build-20261011T090131Z.log`, `xtool-build-20261011T090542Z.log`). No new installation, real tailnet SSH test, Keychain/migration interaction or native screenshot was performed. Native finish disposition remains **recapture**; compilation is not visual/runtime approval.
+**Sixteen Core tests pass** (`ios/TestResults/core-tailscale-ssh.log`). The actual loopback transport passes repeated keyless logins, rejecting denied users/password-only SSH, no supplied-secret fallback, missing/mismatched host pins and the earlier crash regressions (`ssh-transport-regression.log`). The real arm64 iPhone app compiles/links/packages in initial and source-change confirmation builds (`xtool-build-20261011T090131Z.log`, `xtool-build-20261011T090542Z.log`). Real tailnet SSH, Keychain/migration interaction and native screenshots remain unverified. Native finish disposition remains **recapture**; compilation is not visual/runtime approval.
+
+Authorized in-place USB update (2026-10-11): the user explicitly requested installation. Existing pairing validated and Developer Mode was already enabled on the selected connected iPhone running iOS 26.6.2. `tools/deploy-ios-linux.sh` ran once with the existing `440e66d` app artifact; provisioning, signing, installation and installer verification completed with `Successfully installed!`. No certificate-revocation prompt appeared. No uninstall, saved-profile/Keychain reset, app launch or host setting change was performed. Evidence: `ios/TestResults/deploy-keyless-tailscale-20261011T090750Z.log`. Launch with the existing saved machine and confirm connection/error presentation; installation alone is not runtime proof.
 
 ## Implemented in source
 

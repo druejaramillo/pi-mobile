@@ -35,7 +35,7 @@ Machine setup now serves only the new Tailscale SSH path: name, Tailscale addres
 
 Existing saved SSH logins remain unchanged. Their editor offers a deliberate **Switch to Tailscale SSH** action, which clears the draft pin and requires the verified Tailscale-advertised key before Save. Cancel retains saved state; legacy Keychain items are not erased by migration. Switch/remove keep minimum 44pt native glass controls; the system form, semantic type/colors and navigation remain unchanged. Tailscale SSH must be enabled and allowed by an `accept` rule; interactive `check` sign-in is unsupported.
 
-This form compiles in the real arm64 app (`ios/TestResults/xtool-build-20261011T090542Z.log`). Sixteen Core tests and the keyless/legacy loopback transport regression pass. No new installation or native screenshots exist for the simplified form; native finish disposition is **recapture**, not visual approval. See [the keyless checklist](TESTING.md#tailscale-ssh-setup--required-native-verification).
+This form compiles in the real arm64 app (`ios/TestResults/xtool-build-20261011T090542Z.log`). Sixteen Core tests and the keyless/legacy loopback transport regression pass. The simplified build (`440e66d`) was subsequently signed and successfully installed in place over USB after explicit user authorization (`ios/TestResults/deploy-keyless-tailscale-20261011T090750Z.log`). No uninstall or data reset was performed. No launch verification or native screenshots exist for the simplified form; native finish disposition is **recapture**, not visual approval. See [the keyless checklist](TESTING.md#tailscale-ssh-setup--required-native-verification).
 
 ## Verification state (Liquid Glass checkpoint)
 
