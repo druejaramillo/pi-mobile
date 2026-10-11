@@ -1,5 +1,19 @@
 # Pi Mobile host setup (Linux/POSIX)
 
+## Connect an existing Herdr session first
+
+Start here for machine/workspace/tab browsing. You do **not** need to create or restart a Herdr session, load a Pi extension, or run `npm ci` for this step.
+
+1. On the host, have this repository available. An existing checkout is enough: the adapter is `host/bridge-cli.mjs` and uses the adjacent `host/lib/` directory. Its runtime needs Node 22.19+ and Herdr in the SSH account's noninteractive PATH; it does not need npm dependencies.
+2. Find the existing session with `herdr session list --json`. Use a name whose `running` value is `true`. The ordinary unnamed session is `default`.
+3. On the phone, edit/add the machine with its **Tailscale name or address** and **Host username**. The username must be the host account that owns the Herdr session. Tailscale SSH must already be enabled and allow Pi Mobile's identity to use that username; see below if it is not.
+4. Expand **Host bridge**. Set **Herdr session** to the existing name. Set **Bridge path relative to home** to the actual checkout path—not a shell command. For a checkout at `$HOME/Projects/pi-mobile`, enter `Projects/pi-mobile/host/bridge-cli.mjs`. An absolute path is accepted too. The default `.local/share/pi-mobile/host/bridge-cli.mjs` is only a suggested location; the app does not create or populate it.
+5. Save and retry the connection. The app starts only its short-lived SSH adapter and reads the existing session. It does not install software, start a Herdr server or restart panes.
+
+If the adapter file is missing at the saved path, Node can exit 1 before the bridge handshake. Fix that path rather than resetting Tailscale, deleting the saved machine or reinstalling the phone app. A valid path alone does not prove SSH PATH, policy or session availability; check the exact error if connecting still fails.
+
+**Native Pi conversation/dialog controls are a separate step.** Connecting to Herdr and viewing workspaces does not require the Pi Mobile extension. Native Pi controls require loading `host/pi-mobile-extension.ts` in the deliberately chosen Pi process, as described below. Do not restart/reload all existing agents just to connect the machine.
+
 ## Compatibility boundary
 
 - Node **22.19.0+**, Pi **1.1.0**, Herdr **0.9.1** with `herdr-api-bridge-v1`, `session.snapshot`, and `terminal session observe/control` JSONL. Missing software is an error; the bridge does not install, start, restart, or upgrade it.
@@ -51,7 +65,7 @@ Existing saved fields and Keychain credentials are not reset. Saved Tailscale pr
 
 ## Install deliberately (not performed by this implementation)
 
-Review `host/` before enabling it. In the installation checkout:
+Review `host/` before enabling it. For basic Herdr browsing, use the existing checkout path as above; there is no additional npm installation step. The following installs pinned development/checking dependencies, not the runtime bridge or a background service:
 
 ```sh
 cd /path/to/pi-mobile/host
