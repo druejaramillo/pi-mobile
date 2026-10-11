@@ -34,6 +34,8 @@ if info.get('CFBundleIdentifier') != 'com.druejaramillo.pi-mobile':
 if not (app/'voxtype-profile.json').is_file():
     raise SystemExit('Pi Mobile Linux: missing bundled dictation profile; refusing deployment.')
 PY
+# Compiling new APIs is not enough: refuse a stale executable that still opts into legacy UI.
+python3 "$root/tools/check-iphone-build-metadata.py" "$app"
 auth_status=$(xtool auth status)
 if [[ $auth_status != 'Logged in.'$'\n'* ]]; then
 	printf '%s\n' 'Pi Mobile Linux: signing is not configured. Run source tools/xtool-environment.sh, then xtool auth login --mode key in your terminal.' >&2

@@ -42,7 +42,7 @@ git -C "$swiftterm_dir" diff --no-ext-diff --no-color --src-prefix=a/ --dst-pref
 	exit 2
 }
 python3 - "$root" <<'PY'
-import pathlib, plistlib, sys
+import json, os, pathlib, plistlib, sys
 root = pathlib.Path(sys.argv[1])
 info = plistlib.loads((root / "ios/PiMobile/Info.plist").read_bytes())
 # Let xtool populate executable/name/identifier from the selected library product.
@@ -50,6 +50,12 @@ for key in ("CFBundleIdentifier", "CFBundleExecutable", "CFBundleName"):
     del info[key]
 info["UIDeviceFamily"] = [1]
 output = root / "ios/.xtool-support/Info.plist"
+# Read the supplied SDK; never claim an Xcode version or overwrite Apple's metadata.
+if sdk_settings := os.environ.get("PI_MOBILE_IOS_SDK_SETTINGS"):
+    sdk = json.loads(pathlib.Path(sdk_settings).read_text())
+    info["DTSDKName"] = sdk["CanonicalName"]
+    info["DTPlatformName"] = "iphoneos"
+    info["DTPlatformVersion"] = sdk["Version"]
 output.write_bytes(plistlib.dumps(info, sort_keys=False))
 PY
 printf '%s\n' 'Pi Mobile Linux: pinned dependency and app metadata prepared.'

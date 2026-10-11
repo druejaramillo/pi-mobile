@@ -52,6 +52,14 @@ Expected output after a successful build:
 
 **Verified:** full and repeated builds succeed, including a source-timestamp rebuild. The output is a Mach-O arm64 executable targeting iOS 17, with the exact icon/dictation profile and FluidAudio resource bundle. No third-party dynamic framework is required by its load commands. This is compile/link/package evidence, not device execution or an app-hosted XCTest pass.
 
+### Linked SDK metadata and native Liquid Glass
+
+A new SDK's headers are not enough. The original Linux cross-build recorded **linked SDK 17.0** in the executable's `LC_BUILD_VERSION`, despite using Apple's iOS 27 SDK. Native navigation and toolbar controls consequently remained eligible for legacy compatibility styling while custom glass APIs compiled successfully.
+
+The build script now reads the supplied SDK's actual version and canonical name. App-scoped linker settings record that SDK separately from the unchanged iOS 17 deployment minimum; the derived plist receives matching SDK metadata without inventing an Xcode version. Linux build-tool executables and the Mac lane are not changed.
+
+`tools/check-iphone-build-metadata.py` checks the actual executable after packaging and before signing. It rejects SDKs older than 26, mismatched SDK/plist values and an explicit design-compatibility opt-out. Six CLI-boundary tests cover those guards. This is a build-metadata regression check, **not visual verification**; the native controls still need an actual iPhone/Simulator inspection.
+
 ### If an earlier checkout failed at `ld.lld -version_details`
 
 Update the checkout, then rerun:

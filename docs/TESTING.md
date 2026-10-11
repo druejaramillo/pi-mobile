@@ -49,6 +49,15 @@ Evidence: `ios/TestResults/core-key-credential.log`. This proves the platform-ne
 
 Both real builds must exit zero and validate the unsigned app's identity, iPhone-only family, executable, icon and exact dictation profile. Repeating matters: Swift 6.4's default cached cross-target path reproduced a wrong-linker JSON-probe failure after a successful first build. The script now bypasses SwiftPM's affected manifest cache while retaining reusable SwiftBuild descriptions/objects. See [LINUX_SETUP.md](LINUX_SETUP.md) for the fix and retained failing/passing evidence. Four real builds passed, including a source-timestamp rebuild. This does not run iOS code or the app-hosted tests.
 
+### Linked SDK regression — native navigation compatibility
+
+```sh
+python3 tools/test-iphone-build-metadata.py
+python3 tools/check-iphone-build-metadata.py ios/xtool/PiMobile.app
+```
+
+Six CLI tests pass. The actual pre-fix app failed with `linked SDK is 17.0.0`; after the app-scoped linker correction it passes with `linked SDK 27.0.0; minimum iOS 17.0.0`. The build pipeline additionally requires exact agreement with the supplied Apple's SDK settings and derived plist. Deployment refuses a stale legacy-SDK executable before signing. These checks do not execute UIKit or prove the rendered material; they prevent the specific packaging condition that kept native bars in compatibility styling.
+
 ## Native session and dictation — Xcode Simulator
 
 Use Xcode 26+ / Swift 6.2+, XcodeGen, and a **fresh Simulator with no saved machines**. The app-hosted test target launches the real app; a previously configured Simulator can otherwise trigger its normal foreground machine refresh.

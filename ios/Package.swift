@@ -1,5 +1,15 @@
 // swift-tools-version: 6.4
 import PackageDescription
+import Foundation
+
+// SwiftBuild's Linux cross-linker otherwise records the deployment target as the SDK,
+// which keeps native navigation in legacy compatibility styling even on iOS 26.
+// Scope the correction to the app so Linux build-tool executables remain unaffected.
+let iphoneSDKVersion = ProcessInfo.processInfo.environment["PI_MOBILE_IOS_SDK_VERSION"]
+let iphoneSDKLinkerSettings: [LinkerSetting] = iphoneSDKVersion.map { version in
+    [.unsafeFlags(["-Xlinker", "-platform_version", "-Xlinker", "ios",
+        "-Xlinker", "17.0", "-Xlinker", version], .when(platforms: [.iOS]))]
+} ?? []
 
 // xtool links this library's @main SwiftUI entry into its generated executable.
 // The XcodeGen build remains independent of this Linux packaging manifest.
@@ -35,7 +45,8 @@ let package = Package(
             path: "PiMobile",
             // xtool copies the profile and icon to Bundle.main via xtool.yml.
             exclude: ["Info.plist", "Assets.xcassets", "Resources"],
-            swiftSettings: [.swiftLanguageMode(.v5)]
+            swiftSettings: [.swiftLanguageMode(.v5)],
+            linkerSettings: iphoneSDKLinkerSettings
         ),
     ]
 )
