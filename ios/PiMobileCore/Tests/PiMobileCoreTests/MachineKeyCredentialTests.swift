@@ -2,7 +2,7 @@ import Foundation
 import PiMobileCore
 import XCTest
 
-/// Tests the editor's public credential preparation seam without Keychain, clipboard or real SSH keys.
+/// Tests legacy credential preparation without Keychain access or real SSH keys.
 final class MachineKeyCredentialTests: XCTestCase {
     // Synthetic armor/base64 only; cryptographic key parsing remains the SSH transport's responsibility.
     private let privateKey = "-----BEGIN OPENSSH PRIVATE KEY-----\nZml4dHVyZQ==\n-----END OPENSSH PRIVATE KEY-----"

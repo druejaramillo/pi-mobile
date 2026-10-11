@@ -34,7 +34,7 @@ struct MachinesView: View {
                 ContentUnavailableView {
                     Label("No machines yet", systemImage: "server.rack")
                 } description: {
-                    Text("Add a Tailscale host, its SSH credential and verified host public key.")
+                    Text("Add a Tailscale SSH host and verify its identity. No private key or password needed.")
                 } actions: {
                     Button("Add machine", systemImage: "plus") { adding = true }
                         .mobileGlassButtonStyle(prominent: true)

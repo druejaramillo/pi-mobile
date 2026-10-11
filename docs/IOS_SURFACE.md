@@ -29,11 +29,19 @@ The user requested native Liquid Glass, a prettier interface and a more magical 
 - Keep motion brief and state-driven. Honor Reduce Motion, Reduce Transparency and increased contrast. Never animate streaming text or add ambient effect loops.
 - Preserve cached/offline visibility, exact pane destinations, terminal control/takeover confirmations, permission action labels, grant widths and every host-owned decision.
 
-## Verification state
+## Keyless machine setup simplification
 
-The refreshed app compiles, links and packages for arm64 iPhone through the Linux lane. Thirteen platform-neutral Core tests pass; these do not exercise the UI. Latest evidence is `ios/TestResults/xtool-build-20261011T083838Z.log` and the source-derived system in [DESIGN.md](../DESIGN.md).
+Machine setup now serves only the new Tailscale SSH path: name, Tailscale address, host username and **verified public host identity**, with port 22 automatic. Private-key import/paste, passwords, passphrases and the authentication picker are removed. The public identity key stays because the app cannot read the system Tailscale app's coordination data; it is not a private login credential. Host bridge session/path defaults move under a native disclosure.
 
-An independent source review found accessory-height overflow risk and unconditional bottom anchoring that bypassed Follow output. Both named findings were scored resolved at source scope after the fixes. A subsequent source review spotted missing explicit 44pt terminal ownership and PasteButton frames; these are now resolved **at source scope only**. Actual PasteButton generic glass styling and hit testing remain runtime-only risks; no full-surface visual approval is implied.
+Existing saved SSH logins remain unchanged. Their editor offers a deliberate **Switch to Tailscale SSH** action, which clears the draft pin and requires the verified Tailscale-advertised key before Save. Cancel retains saved state; legacy Keychain items are not erased by migration. Switch/remove keep minimum 44pt native glass controls; the system form, semantic type/colors and navigation remain unchanged. Tailscale SSH must be enabled and allowed by an `accept` rule; interactive `check` sign-in is unsupported.
+
+This form compiles in the real arm64 app (`ios/TestResults/xtool-build-20261011T090542Z.log`). Sixteen Core tests and the keyless/legacy loopback transport regression pass. No new installation or native screenshots exist for the simplified form; native finish disposition is **recapture**, not visual approval. See [the keyless checklist](TESTING.md#tailscale-ssh-setup--required-native-verification).
+
+## Verification state (Liquid Glass checkpoint)
+
+The Liquid Glass checkpoint compiles, links and packages for arm64 iPhone through the Linux lane. Thirteen platform-neutral Core tests passed at that checkpoint; these do not exercise the UI. Its evidence is `ios/TestResults/xtool-build-20261011T083838Z.log` and the source-derived system in [DESIGN.md](../DESIGN.md).
+
+An independent source review found accessory-height overflow risk and unconditional bottom anchoring that bypassed Follow output. Both named findings were scored resolved at source scope after the fixes. A subsequent source review spotted missing explicit 44pt terminal ownership and PasteButton frames; these are now resolved **at source scope only**. The subsequent keyless setup removes those PasteButtons entirely. No full-surface visual approval is implied.
 
 Packaging fix `5aa5d6d` corrected metadata that recorded linked SDK17 despite actual SDK27. The current Mach-O records SDK 27.0.0 with deployment minimum 17.0.0; plist SDK metadata is 27.0. Six metadata CLI regressions pass. These checks do not establish runtime glass appearance.
 

@@ -19,7 +19,7 @@ public enum SSHBridgeError: Error, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .invalidProfile(let reason): return "SSH profile invalid: \(reason)"
-        case .invalidSecret: return "SSH secret invalid: provide a password or an OpenSSH Ed25519 private key with its passphrase."
+        case .invalidSecret: return "Saved SSH credential invalid: switch this machine to Tailscale SSH after enabling it on the host."
         case .tailscaleSSHUnavailable: return "Tailscale SSH login failed: enable SSH on the host and allow this username with an accept rule in the tailnet policy. Interactive check-mode sign-in is not supported."
         case .disconnected: return "SSH bridge disconnected: command delivery may be uncertain; refresh before acting again."
         case .requestDeadline: return "SSH bridge deadline exceeded: command delivery may be uncertain; do not replay it automatically."
@@ -92,7 +92,7 @@ struct SSHBridgeConfiguration {
     }
 }
 
-/// The one-string facade accepts this JSON bundle for encrypted keys or key/password authentication.
+/// Existing Keychain secrets may contain this JSON bundle for legacy encrypted-key or key/password login.
 private struct SSHCredentialBundle: Decodable {
     let privateKey: String?
     let password: String?

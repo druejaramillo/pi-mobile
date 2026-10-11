@@ -1,11 +1,11 @@
 import Foundation
 
-/// Prepares imported or pasted SSH private keys; transport still validates Ed25519 and decryption.
+/// Normalizes legacy SSH private-key text; transport still validates Ed25519 and decryption.
 public struct MachineKeyCredential: Sendable {
     /// The SSH transport limit applies to the entire Keychain secret, including its JSON bundle.
     public static let maximumBytes = 128 * 1024
 
-    /// Normalized OpenSSH text stays in memory until the user explicitly saves to Keychain.
+    /// Normalized OpenSSH text is used only for legacy authentication, never stored in a machine profile.
     public let privateKey: String
 
     /// Checks the private key's armor and base64, not its algorithm or encrypted contents.
@@ -25,7 +25,7 @@ public struct MachineKeyCredential: Sendable {
         self.privateKey = normalized
     }
 
-    /// Preserves the passphrase verbatim and uses the SSH transport's existing secret format.
+    /// Preserves the legacy Keychain wire format and passphrase verbatim; new setup saves no credentials.
     public func keychainSecret(passphrase: String = "") throws -> String {
         guard passphrase.utf8.count <= Self.maximumBytes else { throw MachineKeyCredentialError.tooLarge }
         let secret: String
@@ -48,7 +48,7 @@ public enum MachineKeyCredentialError: Error, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .invalidPrivateKey:
-            return "Add a complete OpenSSH Ed25519 private key, including its BEGIN and END lines, not a public key."
+            return "Saved SSH key invalid: an OpenSSH Ed25519 private key needs its complete BEGIN and END lines."
         case .tooLarge:
             return "SSH key and passphrase are too large. The saved credential must be 128 KiB or smaller."
         }

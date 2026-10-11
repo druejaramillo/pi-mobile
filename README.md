@@ -24,7 +24,7 @@ The launch **Agents** tab indexes existing agents across your machines, with sta
 ./tools/build-ios-linux.sh
 ```
 
-Follow [Linux setup](docs/LINUX_SETUP.md) for the Apple-provided SDK, private toolchain, signing and explicit USB deployment. Thirteen Core XCTest methods pass on this Linux machine, and full/repeated unsigned app builds succeed. The signed app is **installed on an iPhone**, but launch/runtime verification remains outstanding. The Mac build remains available.
+Follow [Linux setup](docs/LINUX_SETUP.md) for the Apple-provided SDK, private toolchain, signing and explicit USB deployment. Sixteen Core XCTest methods pass on this Linux machine, and full/repeated unsigned app builds succeed. The signed app is **installed on an iPhone**, but launch/runtime verification remains outstanding. The Mac build remains available.
 
 ## Layout
 
@@ -33,11 +33,13 @@ Follow [Linux setup](docs/LINUX_SETUP.md) for the Apple-provided SDK, private to
 - `tools/`: development and safe VoxType profile import utilities.
 - `docs/`: setup, compatibility and verification notes.
 
-## Tailscale and SSH credentials
+## Keyless Tailscale SSH
 
-A Tailscale name/IP provides private networking, not automatic SSH login. [Tailscale SSH](https://tailscale.com/docs/features/tailscale-ssh) can authenticate without your own SSH keys when enabled on the host and allowed by its tailnet policy. Pi Mobile currently offers SSH key/password setup, not a keyless Tailscale SSH option.
+New machines use [Tailscale SSH](https://tailscale.com/docs/features/tailscale-ssh) on port 22: no private key, password or passphrase setup. Enable Tailscale SSH on each host and allow the host username in your tailnet's SSH policy. Pi Mobile currently requires an `accept` rule; interactive `check`-mode sign-in is not supported. Tailscale networking alone does not enable Tailscale SSH.
 
-In Add/Edit machine, choose **SSH key** and use **Private key → Paste** or **Import OpenSSH private key**. Once the key is ready, type or **Paste** its passphrase in the secure passphrase row. Keys and passphrases stay in device-only Keychain; the private key is not displayed. A verified host public key is still required.
+Add the machine's Tailscale name/IP, host username and **verified public host identity key**. That public key identifies the server; it is not a private login credential. Host bridge settings keep their defaults under a disclosure. See [host setup](docs/HOST_SETUP.md#enable-keyless-tailscale-ssh) for the trusted public-key copy command and policy prerequisites.
+
+Existing saved SSH logins and device-only Keychain items are preserved. Edit an old machine and explicitly choose **Switch to Tailscale SSH** to migrate; this clears the draft host pin and requires the verified key advertised by Tailscale before Save. Cancel changes nothing.
 
 ## Security boundaries
 
@@ -45,4 +47,4 @@ SSH host keys are explicitly trusted; secrets belong in iOS Keychain, never Git.
 
 ## Current verification
 
-**23 host protocol tests pass**, alongside TypeScript/JavaScript and importer checks. Thirteen Core XCTest methods compile and pass on Linux; eighteen app-hosted XCTest methods remain uncompiled/unrun; [testing instructions](docs/TESTING.md) describe exact coverage and limits. See [build status](docs/BUILD_STATUS.md) for exact checks, compatibility boundaries and unresolved gates. The Linux iOS compile/link/package pass is verified; Mac/Xcode validation and a physical iPhone pass remain required before calling this usable on-device. Compilation is not runtime proof.
+**23 host protocol tests pass**, alongside TypeScript/JavaScript and importer checks. Sixteen Core XCTest methods compile and pass on Linux; nineteen app-hosted XCTest methods remain uncompiled/unrun; [testing instructions](docs/TESTING.md) describe exact coverage and limits. See [build status](docs/BUILD_STATUS.md) for exact checks, compatibility boundaries and unresolved gates. The Linux iOS compile/link/package pass is verified; Mac/Xcode validation and a physical iPhone pass remain required before calling this usable on-device. Compilation is not runtime proof.

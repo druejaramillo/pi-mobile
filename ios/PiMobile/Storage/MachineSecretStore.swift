@@ -1,7 +1,7 @@
 import Foundation
 import Security
 
-/// SSH private keys/passwords are device-only Keychain items, never UserDefaults or Git.
+/// Legacy SSH credentials remain device-only Keychain items; new Tailscale SSH profiles never access them.
 enum MachineSecretStore {
     private static let service = "com.druejaramillo.pi-mobile.ssh"
 
@@ -15,19 +15,6 @@ enum MachineSecretStore {
         guard status == errSecSuccess, let data = result as? Data,
               let secret = String(data: data, encoding: .utf8) else { throw CredentialError.keychain(status) }
         return secret
-    }
-
-    static func saveSecret(_ secret: String, machineId: UUID) throws {
-        let query = itemQuery(machineId)
-        let attributes: [String: Any] = [kSecValueData as String: Data(secret.utf8),
-            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly]
-        let status = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
-        if status == errSecItemNotFound {
-            var newItem = query
-            attributes.forEach { newItem[$0.key] = $0.value }
-            let created = SecItemAdd(newItem as CFDictionary, nil)
-            guard created == errSecSuccess else { throw CredentialError.keychain(created) }
-        } else if status != errSecSuccess { throw CredentialError.keychain(status) }
     }
 
     static func deleteSecret(machineId: UUID) throws {
@@ -45,7 +32,7 @@ enum CredentialError: LocalizedError {
     case missing, keychain(OSStatus)
     var errorDescription: String? {
         switch self {
-        case .missing: return "No SSH credential saved. Edit this machine to add its key or password."
+        case .missing: return "No saved SSH credential. Edit this machine to switch to Tailscale SSH after enabling it on the host."
         case .keychain(let status): return "Keychain could not access the SSH credential (\(status)). Unlock the iPhone and try again."
         }
     }

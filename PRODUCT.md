@@ -27,7 +27,7 @@ Herdr owns terminal processes and topology. Pi owns each conversation, commands,
 - Native iOS controls and navigation, one pane at a time.
 - A first-class global Agents screen lists recognized running agents across every configured machine with status and machine/workspace/tab context. Tapping an agent goes directly to its native conversation or terminal. Unreachable machines and cached/stale state remain explicit; an offline machine must not look empty.
 - Direct SSH connections; no central terminal gateway or public HTTP service.
-- SSH keys stored in Keychain, explicit host-key verification.
+- Keyless Tailscale SSH for new machines, explicit public host-identity verification. No private-key/password/passphrase setup. Existing saved SSH logins retain device-only Keychain compatibility; migration is explicit. Interactive Tailscale SSH check-mode sign-in is not implemented.
 - A native conversation surface backed by the same live Pi process; unsupported custom interfaces remain accessible in the terminal.
 - Permission requests must retain the existing policy, grant widths, confirmation steps and audit trail. No automatic approvals.
 - Actual Plannotator web pages inside the app, forwarded through SSH; return to the originating pane.

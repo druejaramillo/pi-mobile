@@ -26,7 +26,7 @@ Fixtures create their own child processes, Herdr socket and temporary directorie
 
 These peers are not the installed Herdr/TUI implementation. In particular, **native permission-component parsing, double confirmation, scope/audit behavior and desktop races still need verification against the actual package**. A synthetic permission component is intentionally not used to manufacture that proof.
 
-## Native models and machine credentials — Swift package on Linux or Mac
+## Native models and legacy machine credentials — Swift package on Linux or Mac
 
 ```sh
 # Linux, using the prepared private compiler:
@@ -36,9 +36,9 @@ swift test --package-path ios/PiMobileCore --jobs 4
 xcrun swift test --package-path ios/PiMobileCore
 ```
 
-**Thirteen XCTest methods compiled and passed on Linux with Swift 6.4.** Seven cover public command identity/Unicode, UUID uniqueness, null JSON values, action text capabilities, cross-machine location identity, terminal bytes and safe integer conversion. Six exercise the machine editor's public `MachineKeyCredential` preparation seam: imported/pasted line endings, public/truncated/malformed input rejection, exact passphrase preservation, UTF-8 byte limits, total credential-bundle limits and JSON escaping expansion. These use synthetic armor/base64, not real private keys; Ed25519 parsing and decryption remain transport checks.
+**Sixteen XCTest methods compiled and passed on Linux with Swift 6.4.** Seven cover public command identity/Unicode, UUID uniqueness, null JSON values, action text capabilities, cross-machine location identity, terminal bytes and safe integer conversion. Three cover keyless Tailscale defaults, profile round-trip/host-pin preservation and decoding existing key/password/dual-auth profiles without changing their credential requirement or port. Six exercise the retained public `MachineKeyCredential` preparation seam used for legacy private-key normalization: line endings, public/truncated/malformed input rejection, exact passphrase preservation, UTF-8 byte limits, credential-bundle limits and JSON escaping. These use synthetic armor/base64, not real private keys; Ed25519 parsing and decryption remain transport checks. The credential-entry UI has been removed.
 
-Evidence: `ios/TestResults/core-key-credential.log`. This proves the platform-neutral Core package, not clipboard interaction, Keychain, UIKit/SSH/audio or iOS execution. See [LINUX_SETUP.md](LINUX_SETUP.md) for setup.
+Evidence: `ios/TestResults/core-tailscale-ssh.log`. This proves the platform-neutral Core package, not Keychain, UIKit/SSH/audio or iOS execution. See [LINUX_SETUP.md](LINUX_SETUP.md) for setup.
 
 ## Linux iPhone compile/link/package regression
 
@@ -64,9 +64,9 @@ Six CLI tests pass. The actual pre-fix app failed with `linked SDK is 17.0.0`; a
 ./tools/test-ssh-transport.sh
 ```
 
-The save/launch crash investigation adds this standalone connection-boundary fixture. It compiles the app's actual `SSHOwnedClient`, `SSHBridgeConfiguration` and `SSHChannelOwnership` sources, without `@testable`, mocked transport or inspection of private state. Servers bind only to `127.0.0.1` on ephemeral ports, use freshly generated host keys and accept only a synthetic test password. No saved machine, Keychain, Tailscale settings, host bridge or live agent is accessed.
+The save/launch crash investigation adds this standalone connection-boundary fixture. It compiles the app's actual `SSHOwnedClient`, `SSHBridgeConfiguration` and `SSHChannelOwnership` sources, without `@testable`, mocked transport or inspection of private state. Servers bind only to `127.0.0.1` on ephemeral ports, use freshly generated host keys and accept either a synthetic password or `none` for a single fixture username. This models the keyless SSH protocol, not real tailnet identity or policy evaluation. No saved machine, Keychain, Tailscale settings, host bridge or live agent is accessed.
 
-**Passed on Linux with Swift 6.4:** three fresh authenticated connections and clean closes, prompt password rejection, mismatched host-key rejection and closing owned sockets during a stalled login. The unpatched code failed with the exact device assertion in `EventLoop.preconditionInEventLoop` (exit 132). Applying only the event-loop patch exposed a readiness timeout; placing the observer before Citadel's handshake handler and observing the raw close future resolved it. Evidence: `ios/TestResults/ssh-transport-red.log`, `ssh-transport-loop-fix.log` and `ssh-transport-final.log`.
+**Passed on Linux with Swift 6.4:** three fresh password-authenticated connections and clean closes, prompt password rejection, mismatched host-key rejection and closing owned sockets during a stalled login. The keyless extension also passes repeated `none` logins without a secret, ignoring a supplied old secret, denied usernames, rejection of password-only SSH without credential fallback, missing/mismatched host pins and retaining the legacy credential requirement. Citadel's one-shot custom delegate initially replaced the expected rejection with `allAuthenticationOptionsFailed`; the app now maps that keyless-only failure to an actionable Tailscale error. Current evidence: `ios/TestResults/ssh-transport-regression.log`. The unpatched code failed with the exact device assertion in `EventLoop.preconditionInEventLoop` (exit 132). Applying only the event-loop patch exposed a readiness timeout; placing the observer before Citadel's handshake handler and observing the raw close future resolved it. Evidence: `ios/TestResults/ssh-transport-red.log`, `ssh-transport-loop-fix.log` and `ssh-transport-final.log`.
 
 The script stages symlinks under ignored `.build/ssh-transport-regression`, uses the same pinned/patched Citadel as both app lanes, and disables crash core dumps. Its Linux-only NIOSSH patch adds the defining `CDispatch` import required by Swift 6.4; it changes no runtime behavior or iOS dependency source. First compilation builds the native dependencies; cached runs take seconds. macOS execution is supported by the fixture but unrun here.
 
@@ -83,22 +83,23 @@ xcrun simctl list devices available
 
 The script checks prerequisites, builds the app, runs the Core package tests, then runs the `PiMobileTests` target. It refuses physical-device destinations. `.xcresult` evidence is saved under ignored `ios/TestResults/` and its path is printed after success. It does not install tools, deploy to hosts or change signing/provisioning.
 
-Eighteen XCTest methods cover the public SSH facade's disconnected/invalid-pin/unadvertised-review guards, dictation's unprepared/cancelled/invalid-profile paths, and literal offline-cleanup/draft-joining vectors. Tests use invalid or unprepared model profiles; successful microphone capture/inference and model downloads are not required. They import public modules without `@testable` access to internals.
+Nineteen XCTest methods cover the public SSH facade's disconnected/invalid-pin/unadvertised-review guards (including keyless connect with no secret), dictation's unprepared/cancelled/invalid-profile paths, and literal offline-cleanup/draft-joining vectors. Tests use invalid or unprepared model profiles; successful microphone capture/inference and model downloads are not required. They import public modules without `@testable` access to internals.
 
-**The eighteen app-hosted tests have only had source grammar/project-YAML checks here.** Their compilation/execution and Xcode project generation remain unrun; do not treat the passing Core package as an app-test pass. xtool's Linux lane does not run the iOS Simulator.
+**The nineteen app-hosted tests remain uncompiled/unrun here.** Their compilation/execution and Xcode project generation remain unrun; do not treat the passing Core package as an app-test pass. xtool's Linux lane does not run the iOS Simulator.
 
-## Machine credential paste — required native verification
+## Tailscale SSH setup — required native verification
 
-The Linux lane compiles the real SwiftUI paste controls but cannot exercise iOS clipboard interaction. On a fresh Simulator or iPhone, use disposable test keys and verify:
+The Linux lane compiles the simplified native form but cannot prove its iPhone behavior. Use a deliberately chosen disposable host/session and verify:
 
-- **Private key → Paste** accepts the complete OpenSSH text, including CRLF line endings; file import remains available. Only “Key ready to save” appears, never the private key itself.
-- The passphrase row's **Paste** fills its secure field. Leading/trailing whitespace and Unicode are preserved; no secret appears in errors or machine settings.
-- Pasting a public key, truncated key or oversized input shows a recoverable error without replacing an already-ready key. A valid retry clears the error.
-- Replacing a key clears its prior passphrase. Changing authentication clears both draft values; editing without a replacement retains the saved credential.
-- Save, reopen and connect with a disposable encrypted Ed25519 key to verify the actual Keychain/SSH path. Cancel leaves the saved credential unchanged.
-- Inspect both appearances, large Dynamic Type and VoiceOver; the Paste controls have distinct private-key/passphrase accessibility labels.
+- Add machine shows name, Tailscale address, host username and public host identity. No authentication picker, private-key import/paste, password/passphrase field or port setting appears. Host bridge defaults are available under a disclosure.
+- Save with a valid, verified Tailscale-advertised public key and an SSH `accept` policy; connect without a Keychain item. Missing/invalid/mismatched public keys fail closed and never get automatically trusted.
+- A password-only SSH server, denied username or unmet Tailscale policy presents a recoverable error, never a credential prompt or automatic fallback. Interactive `check` sign-in is unsupported and must not be portrayed as working.
+- Upgrade retains the existing saved machine, port, public key and Keychain login. Edit/cancel changes nothing. Saving an ordinary edit does not silently migrate it.
+- **Switch to Tailscale SSH** clears only the draft pin, sets port 22 and requires the verified advertised key before Save. Cancel retains the old profile; Save keeps its UUID/drafts and leaves its old Keychain item intact but unused. Remove still deletes only the saved connection/credential, not host sessions.
+- Inspect light/dark, largest Dynamic Type, VoiceOver and keyboard layout; public-key input, disclosure, Save/Cancel and migration/remove actions remain readable and reachable.
+- Relaunch with the saved profile, background/foreground and explicitly refresh: no crash, no secret lookup for keyless profiles and no mutation replay.
 
-These interaction and connected-path checks remain **unrun**; the Core tests and cross-build are not substitutes.
+These connected/device/visual checks remain **unrun**. Sixteen Core tests, the real loopback SSH regression and cross-build are not substitutes. No new device installation is performed by this setup simplification.
 
 ## Liquid Glass — required native inspection
 
