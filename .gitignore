@@ -27,6 +27,7 @@ ios/.xtool-support/
 ios/xtool/
 ios/.swiftpm/
 ios/.sourcekit-lsp/
+ios/TailscaleClient/.artifacts/
 
 # Developer-only evidence/runtime
 .impeccable/mocks/
