@@ -75,6 +75,25 @@ test('terminal input needs observation, then control, then a distinct takeover c
   assert.equal((await phone.request('terminal.input', { data: typed })).error?.code, 'terminal_read_only');
 });
 
+test('leaving a pane detaches subscriptions without taking the machine directory or Pi offline', async (t) => {
+  const world = await PiTestWorld.start(); t.after(() => world.close());
+  const phone = world.phone();
+  const before = await attachTestAgent(phone, world.terminalId);
+  await world.desktop.request('agent.working', { value: true });
+  const params = { terminalId: world.terminalId, cols: 80, rows: 24 };
+  assert.deepEqual((await phone.request('terminal.attach', { ...params, control: false, takeover: false })).result, { attached: true });
+  assert.equal((await phone.request('terminal.attach', { ...params, control: true, takeover: false })).error?.code, 'terminal_unavailable');
+  assert.deepEqual((await phone.request('terminal.attach', { ...params, control: true, takeover: true })).result, { attached: true });
+  assert.deepEqual((await phone.request('terminal.detach')).result, { detached: true });
+  assert.deepEqual((await phone.request('agent.detach')).result, { detached: true });
+  assert.equal((await phone.request('terminal.input', { data: 'eA==' })).error?.code, 'terminal_read_only');
+  assert.equal((await phone.request<{ protocol: number }>('hello')).result?.protocol, 1);
+  assert.ok((await phone.request<TestTopology>('snapshot')).result?.panes.some((pane) => pane.terminalId === world.terminalId));
+  const after = await attachTestAgent(phone, world.terminalId);
+  assert.equal(after.generation, before.generation);
+  assert.equal(after.status, 'working');
+});
+
 test('terminal frames preserve identical successive output and explicit grid changes', async (t) => {
   const world = await PiTestWorld.start(); t.after(() => world.close());
   const phone = world.phone();

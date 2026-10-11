@@ -28,6 +28,7 @@ public final class SSHBridgeConnection: ObservableObject {
     private var readyDeadline: Task<Void, Never>?
     private var pending: [String: PendingBridgeRequest] = [:]
     private var renderHistory = TerminalRenderHistory()
+    private let paneSubscriptions = PaneSubscriptionLifecycle()
     private var reviews: [UUID: OwnedReviewTunnel] = [:]
     private var backgroundSubscription: AnyCancellable?
     private var tailscale: TailscaleService?
@@ -143,6 +144,36 @@ public final class SSHBridgeConnection: ObservableObject {
         state = "disconnected"
     }
 
+    /// The next pane waits for the previous view's owned subscriptions to finish detaching.
+    public func preparePaneSubscription(owner: UUID) async throws {
+        guard state == "connected" else { throw SSHBridgeError.disconnected }
+        let token = epoch
+        try await paneSubscriptions.preparePaneSubscription(owner: owner)
+        guard epoch == token, state == "connected" else { throw SSHBridgeError.disconnected }
+    }
+
+    /// Leaving a pane releases mobile agent/control subscriptions, not the shared foreground SSH connection.
+    public func releasePaneSubscription(owner: UUID) {
+        let token = epoch
+        paneSubscriptions.releasePaneSubscription(owner: owner) { [weak self] in
+            guard let self, self.epoch == token, self.state == "connected" else { throw SSHBridgeError.disconnected }
+            do {
+                _ = try await self.request(method: "terminal.detach", params: .object([:]))
+                _ = try await self.request(method: "agent.detach", params: .object([:]))
+            } catch {
+                // If control release cannot be confirmed, closing the owned socket fails closed.
+                self.channelLost(token: token, error: error)
+                throw error
+            }
+        }
+    }
+
+    /// Changing a saved endpoint keeps this observed object but discards the old endpoint's cached topology.
+    func resetForProfileChange() {
+        disconnect()
+        topology = nil
+    }
+
     /// Opens forwarding only for a currently advertised Plannotator review, never an arbitrary remote host.
     public func openReview(_ review: PlannotatorReview) async throws -> PlannotatorTunnel {
         guard state == "connected", let client, isAdvertised(review) else { throw SSHBridgeError.invalidReview }
@@ -184,6 +215,7 @@ public final class SSHBridgeConnection: ObservableObject {
                             switch output {
                             case .stdout(let buffer):
                                 try framer.consume(buffer) { record in
+                                    guard self?.epoch == token else { throw SSHBridgeError.disconnected }
                                     try self?.receiveRecord(record)
                                 }
                             case .stderr:
@@ -267,6 +299,7 @@ public final class SSHBridgeConnection: ObservableObject {
 
     private func tearDown(error: Error) {
         epoch = UUID()
+        paneSubscriptions.invalidatePaneSubscriptions()
         ownership?.close()
         ownership = nil
         let oldClient = client

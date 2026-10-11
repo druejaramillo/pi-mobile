@@ -141,7 +141,7 @@ struct MachineEditorView: View {
             // Cancel, backgrounding or a failed trusted lookup cannot persist a partial migration.
             try Task.checkCancellation()
             try machines.saveMachine(updated)
-            sessions.forgetMachine(machineId)
+            sessions.resetMachine(machineId)
             dismiss()
             Task { await sessions.refreshMachine(updated) }
         } catch is CancellationError { /* Cancel never alters the saved machine. */ }

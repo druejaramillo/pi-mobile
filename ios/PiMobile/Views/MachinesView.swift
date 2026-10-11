@@ -59,7 +59,10 @@ struct MachineBrowserView: View {
     let profile: MachineProfile
     @ObservedObject var connection: SSHBridgeConnection
     @EnvironmentObject private var sessions: MobileSessionHub
+    @EnvironmentObject private var machines: MachineStore
     @State private var editing = false
+
+    private var currentProfile: MachineProfile { machines.machines.first { $0.id == profile.id } ?? profile }
 
     var body: some View {
         List {
@@ -86,7 +89,7 @@ struct MachineBrowserView: View {
                     Section(workspace.name) {
                         ForEach(topology.tabs.filter { $0.workspaceId == workspace.id }) { tab in
                             NavigationLink {
-                                TabPanesView(profile: profile, tab: tab, connection: connection)
+                                TabPanesView(profile: currentProfile, tab: tab, connection: connection)
                             } label: {
                                 Label(tab.name, systemImage: "rectangle.on.rectangle")
                             }
@@ -101,7 +104,7 @@ struct MachineBrowserView: View {
         }
         .listStyle(.insetGrouped)
         .listSectionSpacing(24)
-        .navigationTitle(profile.name)
+        .navigationTitle(currentProfile.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -110,7 +113,7 @@ struct MachineBrowserView: View {
             }.mobileGlassHeaderItem()
         }
         .task { await sessions.refreshMachine(profile) }
-        .sheet(isPresented: $editing) { MachineEditorView(profile: profile) }
+        .sheet(isPresented: $editing) { MachineEditorView(profile: currentProfile) }
     }
 }
 

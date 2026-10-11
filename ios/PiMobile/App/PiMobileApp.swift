@@ -2,10 +2,16 @@ import SwiftUI
 
 @main
 struct PiMobileApp: App {
-    @StateObject private var machines = MachineStore()
-    @StateObject private var sessions = MobileSessionHub()
+    @StateObject private var machines: MachineStore
+    @StateObject private var sessions: MobileSessionHub
     @StateObject private var dictation = ParakeetDictation()
     @Environment(\.scenePhase) private var scenePhase
+
+    init() {
+        let machines = MachineStore()
+        _machines = StateObject(wrappedValue: machines)
+        _sessions = StateObject(wrappedValue: MobileSessionHub(machines: machines))
+    }
 
     var body: some Scene {
         WindowGroup {

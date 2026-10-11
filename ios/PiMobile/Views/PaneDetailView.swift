@@ -19,6 +19,7 @@ struct PaneDetailView: View {
     @State private var reviewPresentation: ReviewPresentation?
     @State private var openingReview = false
     @State private var paneVisible = false
+    @State private var paneSubscriptionOwner = UUID()
 
     private var location: PaneLocation { PaneLocation(machineId: profile.id, terminalId: pane.terminalId) }
     private var currentPane: HerdrPane { connection.topology?.panes.first { $0.terminalId == pane.terminalId } ?? pane }
@@ -126,8 +127,8 @@ struct PaneDetailView: View {
             paneVisible = false
             dictation.cancelRecording()
             reviewPresentation?.tunnel.close()
-            // Closing this phone's connection releases control, never host agents or shells.
-            connection.disconnect()
+            // Release only this pane's subscriptions; the machine directory remains live in the foreground.
+            connection.releasePaneSubscription(owner: paneSubscriptionOwner)
         }
         .sheet(item: $reviewPresentation, onDismiss: {
             Task { await sessions.refreshMachine(profile) }
@@ -216,6 +217,11 @@ struct PaneDetailView: View {
         attaching = true
         defer { attaching = false }
         do {
+            try await connection.preparePaneSubscription(owner: paneSubscriptionOwner)
+            guard paneVisible, !Task.isCancelled else {
+                connection.releasePaneSubscription(owner: paneSubscriptionOwner)
+                return
+            }
             _ = try await connection.request(method: "agent.attach", params: .object(["terminalId": .string(pane.terminalId)]))
             errorMessage = nil
         } catch { errorMessage = error.localizedDescription }
@@ -226,6 +232,11 @@ struct PaneDetailView: View {
         attaching = true
         defer { attaching = false }
         do {
+            try await connection.preparePaneSubscription(owner: paneSubscriptionOwner)
+            guard paneVisible, !Task.isCancelled else {
+                connection.releasePaneSubscription(owner: paneSubscriptionOwner)
+                return
+            }
             _ = try await connection.request(method: "terminal.attach", params: .object([
                 "terminalId": .string(pane.terminalId), "control": .bool(control), "takeover": .bool(takeover),
                 "cols": .number(80), "rows": .number(24)]))

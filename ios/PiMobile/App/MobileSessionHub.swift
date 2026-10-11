@@ -8,29 +8,34 @@ final class MobileSessionHub: ObservableObject {
     @Published private(set) var refreshing = Set<UUID>()
     @Published private(set) var checkedAt: [UUID: Date] = [:]
     @Published private(set) var machineErrors: [UUID: String] = [:]
-    private var connections: [UUID: SSHBridgeConnection] = [:]
+    private let registry = MachineSessionRegistry<SSHBridgeConnection>()
+    private let machines: MachineStore
     private var subscriptions: [UUID: AnyCancellable] = [:]
     private var cachedTopologies: [UUID: HerdrTopology] = [:]
-    private var refreshGeneration = UUID()
     let drafts = PaneDraftStore()
     let tailscale = TailscaleService()
 
+    init(machines: MachineStore) { self.machines = machines }
+
     func connection(for machineId: UUID) -> SSHBridgeConnection {
-        if let connection = connections[machineId] { return connection }
-        let connection = SSHBridgeConnection(tailscale: tailscale)
-        connections[machineId] = connection
-        subscriptions[machineId] = connection.objectWillChange.sink { [weak self] _ in
-            // Child @Published changes become visible after objectWillChange's pre-change callback.
-            Task { @MainActor in self?.objectWillChange.send() }
+        registry.connection(for: machineId) {
+            let connection = SSHBridgeConnection(tailscale: tailscale)
+            subscriptions[machineId] = connection.objectWillChange.sink { [weak self] _ in
+                // Child @Published changes become visible after objectWillChange's pre-change callback.
+                Task { @MainActor in self?.objectWillChange.send() }
+            }
+            return connection
         }
-        return connection
     }
 
     func refreshMachine(_ profile: MachineProfile) async {
-        guard !refreshing.contains(profile.id) else { return }
-        let generation = refreshGeneration
-        refreshing.insert(profile.id)
-        defer { if generation == refreshGeneration { refreshing.remove(profile.id) } }
+        // Navigation may hold an older profile value after editing; the saved store is authoritative.
+        guard let profile = machines.machines.first(where: { $0.id == profile.id }),
+              let token = registry.beginRefresh(for: profile.id) else { return }
+        refreshing = registry.refreshingMachineIds
+        defer {
+            if registry.finishRefresh(token, for: profile.id) { refreshing = registry.refreshingMachineIds }
+        }
         do {
             let client = connection(for: profile.id)
             if client.state != "connected" {
@@ -39,14 +44,15 @@ final class MobileSessionHub: ObservableObject {
                     ? MachineSecretStore.readSecret(machineId: profile.id) : nil
                 try await client.connect(profile: profile, secret: secret)
             }
+            guard registry.isCurrentRefresh(token, for: profile.id) else { return }
             let response = try await client.request(method: "snapshot", params: .object([:]))
             let topology = try response.decode(HerdrTopology.self)
-            guard generation == refreshGeneration else { return }
+            guard registry.isCurrentRefresh(token, for: profile.id) else { return }
             cachedTopologies[profile.id] = topology
             checkedAt[profile.id] = Date()
             machineErrors.removeValue(forKey: profile.id)
         } catch {
-            guard generation == refreshGeneration else { return }
+            guard registry.isCurrentRefresh(token, for: profile.id) else { return }
             machineErrors[profile.id] = error.localizedDescription
         }
     }
@@ -61,7 +67,7 @@ final class MobileSessionHub: ObservableObject {
     }
 
     func cachedTopology(for machineId: UUID) -> HerdrTopology? {
-        connections[machineId]?.topology ?? cachedTopologies[machineId]
+        registry.existingConnection(for: machineId)?.topology ?? cachedTopologies[machineId]
     }
 
     func agentEntries(_ profiles: [MachineProfile]) -> [GlobalAgentEntry] {
@@ -72,7 +78,7 @@ final class MobileSessionHub: ObservableObject {
                 let workspace = topology.workspaces.first { $0.id == pane.workspaceId }?.name ?? pane.workspaceId
                 let tab = topology.tabs.first { $0.id == pane.tabId }?.name ?? pane.tabId
                 return GlobalAgentEntry(profile: profile, pane: pane, workspaceName: workspace, tabName: tab,
-                    stale: connections[profile.id]?.state != "connected" || machineErrors[profile.id] != nil)
+                    stale: registry.existingConnection(for: profile.id)?.state != "connected" || machineErrors[profile.id] != nil)
             }
         }.sorted { first, second in
             if first.stale != second.stale { return !first.stale }
@@ -83,18 +89,27 @@ final class MobileSessionHub: ObservableObject {
         }
     }
 
+    /// Editing clears old endpoint data, not the connection identity held by an open screen.
+    func resetMachine(_ id: UUID) {
+        registry.resetMachine(id) { $0.resetForProfileChange() }
+        refreshing = registry.refreshingMachineIds
+        checkedAt.removeValue(forKey: id)
+        machineErrors.removeValue(forKey: id)
+        cachedTopologies.removeValue(forKey: id)
+    }
+
     func forgetMachine(_ id: UUID) {
-        connections.removeValue(forKey: id)?.disconnect()
+        registry.removeMachine(id) { $0.resetForProfileChange() }
         subscriptions.removeValue(forKey: id)
+        refreshing = registry.refreshingMachineIds
         checkedAt.removeValue(forKey: id)
         machineErrors.removeValue(forKey: id)
         cachedTopologies.removeValue(forKey: id)
     }
 
     func suspendConnections() {
-        refreshGeneration = UUID()
-        refreshing.removeAll()
-        connections.values.forEach { $0.disconnect() }
+        registry.suspendMachines { $0.disconnect() }
+        refreshing = registry.refreshingMachineIds
         objectWillChange.send()
     }
 }
